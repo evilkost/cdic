@@ -1,0 +1,16 @@
+Flask
+Flask-OpenID
+Flask-Script
+Flask-WTF
+Flask-SQLAlchemy
+SQLAlchemy
+pytz
+python-dateutil
+pyLibravatar
+
+tox
+pytest
+pytest-cov
+
+sphinx
+sphinxcontrib-httpdomain

@@ -1,0 +1,4 @@
+include LICENSE
+include README.txt
+include requirements.txt
+recursive-include docs *.html *.css *.png *.gif
