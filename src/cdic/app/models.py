@@ -1,7 +1,8 @@
 # coding: utf-8
 
 import datetime
-from libravatar import libravatar_url
+# VV todo: looks like it import DNS but py3 version should be dns
+# from libravatar import libravatar_url
 
 from . import constants
 from . import db
@@ -32,13 +33,13 @@ class User(db.Model):
         """
         return self.username
 
-    @property
-    def gravatar_url(self):
-        """
-        Return url to libravatar image.
-        """
-
-        try:
-            return libravatar_url(email=self.mail, https=True)
-        except IOError:
-            return ""
+    # @property
+    # def gravatar_url(self):
+    #     """
+    #     Return url to libravatar image.
+    #     """
+    #
+    #     try:
+    #         return libravatar_url(email=self.mail, https=True)
+    #     except IOError:
+    #         return ""

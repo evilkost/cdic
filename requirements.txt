@@ -4,9 +4,11 @@ Flask-Script
 Flask-WTF
 Flask-SQLAlchemy
 SQLAlchemy
+alembic
 pytz
 python-dateutil
 pyLibravatar
+# pydns
 
 tox
 pytest
