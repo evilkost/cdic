@@ -2,7 +2,7 @@
 
 import os
 
-DEBUG = False
+DEBUG = True
 
 ADMINS = frozenset(['nobody@example.com'])
 SECRET_KEY = 'This string will be replaced with a proper key in production.'
@@ -12,3 +12,9 @@ DATABASE_CONNECT_OPTIONS = {}
 
 CSRF_ENABLED = True
 CSRF_SESSION_KEY = "somethingimpossibletoguess"
+
+
+OPENID_STORE = "/tmp/cdic/openid/"
+
+CDIC_WORKPLACE = "/tmp/cdic/wp"
+COPR_FRONTEND_URL = "http://copr.fedoraproject.org"  # base url to the copr instance

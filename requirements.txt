@@ -3,6 +3,7 @@ Flask-OpenID
 Flask-Script
 Flask-WTF
 Flask-SQLAlchemy
+Flask-Bootstrap
 SQLAlchemy
 alembic
 pytz

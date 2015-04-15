@@ -1,0 +1,63 @@
+{% extends "bootstrap/base.html" %}
+{% block title %}Copr Docker Image Composer{% endblock %}
+
+{% block navbar %}
+
+  <!-- Fixed navbar -->
+  <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">CDIC</a>
+      </div>
+      <div id="navbar" class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="/">Home</a></li>
+          <!--<li><a href="/projects">DProjects</a></li>-->
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          {% if g.user %}
+            <li><a href="/projects/username"> My ({{ g.user.username }}) projects </a> </li>
+            <li><a href="/auth/logout">Logout</a></li>
+          {% else %}
+            <li><a href="/auth/login">Login</a></li>
+          {% endif %}
+        </ul>
+      </div><!--/.nav-collapse -->
+    </div>
+  </nav>
+
+  <!-- looks like some bug in flask-bootstrap style, adding additional space under navbar -->
+  <div>
+    <br />
+    <br />
+    <br />
+  </div>
+
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="starter-template">
+    <h1>Copr Docker Image Composer</h1>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <b>Projects</b>
+      </div>
+      <div class="panel-body">
+        <ul>
+          <li>Foo Bar: owner <a>John Dow</a></li>
+          <li>XYZ: owner <a>John Dow</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.container -->
+{% endblock %}
