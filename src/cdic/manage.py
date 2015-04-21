@@ -34,14 +34,14 @@ class CreateDBCommand(Command):
 
     def run(self, alembic_ini=None):
         CreateSqliteFileCommand().run()
-        db.create_all()  # seem's like it's not work, don't stamp until resolved (*)
+        db.create_all()
 
         # load the Alembic configuration and generate the
         # version table, "stamping" it with the most recent rev:
-        # from alembic.config import Config
-        # from alembic import command
-        # alembic_cfg = Config(alembic_ini)
-        # command.stamp(alembic_cfg, "head")  # (*)
+        from alembic.config import Config
+        from alembic import command
+        alembic_cfg = Config(alembic_ini)
+        command.stamp(alembic_cfg, "head")  # (*)
 
     option_list = (
         Option("--alembic",
