@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block inner_content %}
+  <h1> Editing project: {{ project.title }} </h1>
+
+  <form class="form form-horizontal" method="post" role="form">
+    {{ form.hidden_tag() }}
+    {{ wtf.form_errors(form, hiddens="only") }}
+
+    <input type="hidden" name="title" value="{{ project.title }}" />
+    <label> Select source mode for project</label>
+    {{ wtf.form_field(form.source_mode) }}
+
+    {{ wtf.form_field(form.local_text) }}
+
+
+
+    {{ wtf.form_field(form.git_url) }}
+
+
+     <button type="submit" class="btn btn-default">Submit</button>
+  </form>
+
+
+{% endblock %}

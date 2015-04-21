@@ -2,14 +2,13 @@
 
 import datetime
 
-
-
 # VV todo: looks like it import DNS but py3 version should be dns
 # from libravatar import libravatar_url
 
 from . import constants
-from . import db
+from . import db, app
 # from . import helpers
+from .constants import SourceType
 
 
 class User(db.Model):
@@ -30,8 +29,8 @@ class User(db.Model):
     # optional timezone
     timezone = db.Column(db.String(50), nullable=True)
 
-    # TODO: automark time of user creation
-    #dt_created =
+    created_on = db.Column(db.DateTime, default=db.func.now())
+    updated_on = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
     @property
     def name(self):
@@ -57,18 +56,25 @@ class Project(db.Model):
     Each projects contains base Dockerfile (as stored text or link to repo[only git for now])
     and so number of enabled copr repos.
     """
+    __tablename__ = "project"
 
     id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(120))
 
     # owner
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     user = db.relationship("User", backref=db.backref("projects", lazy="dynamic"))
 
-    # TODO:
-    # dt_created =
+    created_on = db.Column(db.DateTime, default=db.func.now())
+    updated_on = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
-    source_mode = db.Column(db.String(40))  # select what source option is used at the moment
+    source_mode = db.Column(db.String(40), default=SourceType.LOCAL_TEXT,
+                            server_default=SourceType.LOCAL_TEXT)
     #  see .constants.SourceType
     local_text = db.Column(db.Text)
     git_url = db.Column(db.Text)
 
+    @property
+    def url_to_hub(self):
+        return app.config["HUB_PROJECT_URL_TEMPLATE"].format(
+            username=self.user.username, project_id=self.id)

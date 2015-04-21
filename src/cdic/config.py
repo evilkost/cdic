@@ -18,3 +18,5 @@ OPENID_STORE = "/tmp/cdic/openid/"
 
 CDIC_WORKPLACE = "/tmp/cdic/wp"
 COPR_FRONTEND_URL = "http://copr.fedoraproject.org"  # base url to the copr instance
+
+HUB_PROJECT_URL_TEMPLATE = "http://localhost/cdic_{username}_{project_id}"

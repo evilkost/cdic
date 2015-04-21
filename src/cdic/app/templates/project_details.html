@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block inner_content %}
+
+  <h1>Project: {{ project.title }}
+    {% if g.user == project.user %}
+    <span class="small pull-right">
+      <a class="btn btn-default" href="{{ url_for('main.project_edit', project_id=project.id)}}">Edit project</a>
+    </span>
+    {% endif %}
+  </h1>
+
+  <div class="row">
+    <div class="col-xs-12 col-md-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <b>Configuration</b>
+        </div>
+        <div class="panel-body">
+          <dl class="dl-horizontal">
+            <dt>Enabled coprs</dt>
+            <dd>foo/bar, john/kernel-fp</dd>
+
+            <dt>Hub address</dt>
+            <dd><a href="{{ project.url_to_hub }}">{{ project.url_to_hub }}</a></dd>
+
+            <dt>Source type</dt>
+            <dd>{{ project.source_mode }}</dd>
+
+            {% if project.source_mode == "git_url"  and project.git_url %}
+            <dt>Git</dt>
+            <dd>{{ project.git_url }}</dd>
+
+            {% endif %}
+
+            <dt>Auto-build</dt>
+            <dd>disabled</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <div class="col-xs-12 col-md-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <b>Builds</b>
+          {% if g.user == project.user %}
+          <span class="pull-right">
+            <a class="btn-sm btn btn-primary" href="#">Run build</a>
+          </span>
+          {% endif %}
+        </div>
+        <div class="panel-body">
+          <dl class="dl-horizontal">
+
+            <dt>5 min ago</dt>
+            <dd>failed</dd>
+
+          </dl>
+        </div>
+    </div>
+    <!--<div class="col-xs-6 col-md-4">-->
+
+    <!--</div>-->
+  </div>
+
+
+{% endblock %}

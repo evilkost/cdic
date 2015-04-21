@@ -6,7 +6,7 @@ import functools
 import re
 
 import flask
-from flask import g, session, redirect, flash, url_for
+from flask import g, session, redirect, flash, url_for, request
 
 from flask_openid import OpenID
 
@@ -90,3 +90,14 @@ def logout():
     flask.session.pop("openid", None)
     flask.flash(u"You were signed out")
     return flask.redirect(oid.get_next_url())
+
+
+def login_required(f):
+    @functools.wraps(f)
+    def decorated_function(*args, **kwargs):
+        if g.user is None:
+            return redirect(url_for("auth.login", next=request.url))
+
+        return f(*args, **kwargs)
+    return decorated_function
+
