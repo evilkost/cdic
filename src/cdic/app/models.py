@@ -78,3 +78,11 @@ class Project(db.Model):
     def url_to_hub(self):
         return app.config["HUB_PROJECT_URL_TEMPLATE"].format(
             username=self.user.username, project_id=self.id)
+
+    @property
+    def dockerfile_preview(self) -> str:
+        if self.source_mode != SourceType.LOCAL_TEXT:
+            # todo: save to cache during build, and return when availble
+            return None
+        else:
+            return self.local_text

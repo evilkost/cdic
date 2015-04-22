@@ -70,11 +70,13 @@ def project_edit(project_id):
     project = get_project_by_id(int(project_id))
     form = ProjectForm(obj=project)
 
-    if request.method == "POST":
-        if form.validate_on_submit():
-            update_project_from_form(project, form)
-            db.session.add(project)
-            db.session.commit()
+    if request.method == "POST" and form.validate_on_submit():
+        old_source_mode = project.source_mode
+        update_project_from_form(project, form)
+        db.session.add(project)
+        db.session.commit()
+        if old_source_mode == project.source_mode:
+            # if not user should source fields
             return redirect(url_for("main.project_details", project_id=project.id))
 
     return render_template("project_edit.html", project=project, form=form)

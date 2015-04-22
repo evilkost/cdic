@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block inner_content %}
-  <h1> hello </h1>
+  <h1> Create new project </h1>
 
   <form class="form form-horizontal" method="post" role="form">
     {{ form.hidden_tag() }}
@@ -9,9 +9,12 @@
 
     {{ wtf.form_field(form.title) }}
 
-    <label> Select source mode for project</label>
-    {{ wtf.form_field(form.source_mode) }}
-
+    <div class="form-group ">
+      <label class="control-label" for="source_mode">
+        Select source mode for project
+      </label>
+      {{ wtf.form_field(form.source_mode) }}
+    </div>
     <!--{{ wtf.form_field(form.local_text) }}-->
 
      <button type="submit" class="btn btn-default">Submit</button>

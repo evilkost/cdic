@@ -1,11 +1,28 @@
 {% extends "base.html" %}
 
+<!-- for Dockerfile highlighting -->
+{% block styles %}
+  {{super()}}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/styles/default.min.css">
+{% endblock %}
+
+{% block scripts %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/languages/dockerfile.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  {{super()}}
+{% endblock %}
+
+
+
+
 {% block inner_content %}
 
   <h1>Project: {{ project.title }}
     {% if g.user == project.user %}
     <span class="small pull-right">
-      <a class="btn btn-default" href="{{ url_for('main.project_edit', project_id=project.id)}}">Edit project</a>
+      <a class="btn btn-default" href="{{ url_for('main.project_edit', project_id=project.id)}}">Edit</a>
+      <a class="btn btn-primary" href="#">Run build</a>
     </span>
     {% endif %}
   </h1>
@@ -31,10 +48,15 @@
             <dt>Git</dt>
             <dd>{{ project.git_url }}</dd>
 
+            <dt>Dockerfile path</dt>
+            <dd>{{ project.dockerfile_path|default("/") }}</dd>
+
             {% endif %}
 
-            <dt>Auto-build</dt>
-            <dd>disabled</dd>
+
+
+            <!--<dt>Auto-build</dt>-->
+            <!--<dd>disabled</dd>-->
           </dl>
         </div>
       </div>
@@ -43,11 +65,6 @@
       <div class="panel panel-default">
         <div class="panel-heading">
           <b>Builds</b>
-          {% if g.user == project.user %}
-          <span class="pull-right">
-            <a class="btn-sm btn btn-primary" href="#">Run build</a>
-          </span>
-          {% endif %}
         </div>
         <div class="panel-body">
           <dl class="dl-horizontal">
@@ -57,10 +74,21 @@
 
           </dl>
         </div>
+      </div>
     </div>
-    <!--<div class="col-xs-6 col-md-4">-->
 
-    <!--</div>-->
+    <div class="col-xs-12">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <b>Dockerfile preview</b>
+        </div>
+        <div class="panel-body">
+          <pre><code class="dockerfile">{{ project.dockerfile_preview }}</code></pre>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 
 

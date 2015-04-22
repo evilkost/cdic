@@ -8,14 +8,21 @@
     {{ wtf.form_errors(form, hiddens="only") }}
 
     <input type="hidden" name="title" value="{{ project.title }}" />
-    <label> Select source mode for project</label>
-    {{ wtf.form_field(form.source_mode) }}
 
-    {{ wtf.form_field(form.local_text) }}
+    <div class="form-group ">
+      <label class="control-label" for="source_mode">
+        Select source mode for project
+      </label>
+      {{ wtf.form_field(form.source_mode) }}
+    </div>
 
+    {% if project.source_mode == "local_text" %}
+      {{ wtf.form_field(form.local_text,rows=20) }}
+    {% endif %}
 
-
-    {{ wtf.form_field(form.git_url) }}
+    {% if project.source_mode == "git_url" %}
+      {{ wtf.form_field(form.git_url) }}
+    {% endif %}
 
 
      <button type="submit" class="btn btn-default">Submit</button>
