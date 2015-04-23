@@ -20,3 +20,13 @@ CDIC_WORKPLACE = "/tmp/cdic/wp"
 COPR_FRONTEND_URL = "http://copr.fedoraproject.org"  # base url to the copr instance
 
 HUB_PROJECT_URL_TEMPLATE = "http://localhost/cdic_{username}_{project_id}"
+
+
+DOCKERHUB_URL = 'https://hub.docker.com'
+DOCKERREGISTRY_URL = 'https://registry.hub.docker.com'
+DOCKERHUB_USERNAME = 'FILL DOCKER USERNAME'
+DOCKERHUB_PASSWORD = 'FILL DOCKER PASSWORD'
+
+GITHUB_TOKEN = "FILL GITHUB TOKEN"
+GITHUB_USER = "FILL GITHUB USER"
+GITHUB_API_ROOT = "https://api.github.com"

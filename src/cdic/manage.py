@@ -2,12 +2,29 @@
 # coding: utf-8
 
 import os
+import logging
 
 import flask
 from flask_script import Manager, Command, Option, Group
 
 from app import app, db
+from app.api import Api
+
+from util.dockerhub import create_pending_repo
+from util.github import create_github_repo
+
 manager = Manager(app)
+
+
+def setup_logging(log_file_path):
+    logging.basicConfig(
+        filename=log_file_path,
+        # stream=sys.stdout,
+        format='[%(asctime)s][%(name)s][%(levelname)6s]: %(message)s',
+        level=logging.DEBUG
+    )
+
+
 
 
 class CreateSqliteFileCommand(Command):
@@ -61,9 +78,25 @@ class DropDBCommand(Command):
     def run(self):
         db.drop_all()
 
+
+class RunAsyncTasks(Command):
+    """
+    Run cdic task  like docker hub repo creation
+    """
+    def run(self):
+        setup_logging("/tmp/cdic_async_tasks.log")
+
+        api = Api()
+        create_github_repo(api)
+        create_pending_repo(api)
+
+
 manager.add_command("create_sqlite_file", CreateSqliteFileCommand())
 manager.add_command("create_db", CreateDBCommand())
 manager.add_command("drop_db", DropDBCommand())
 
+manager.add_command("run_async_tasks", RunAsyncTasks())
+
 if __name__ == '__main__':
     manager.run()
+

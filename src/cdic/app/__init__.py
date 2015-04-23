@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import os
 from flask import Flask, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
@@ -8,6 +9,7 @@ app = Flask(__name__)
 
 # oid = OpenID(app, app.config["OPENID_STORE"], safe_roots=[])
 app.config.from_pyfile("../config.py")
+app.config.from_pyfile(os.path.expanduser("~/.config/cdic.py"))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
 Bootstrap(app)
 
@@ -19,7 +21,6 @@ from .views.auth import auth_bp
 
 app.register_blueprint(main_bp)
 app.register_blueprint(auth_bp)
-
 
 @app.route('/api/help', methods=['GET'])
 def help():
