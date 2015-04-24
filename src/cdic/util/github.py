@@ -34,7 +34,7 @@ def create_github_repo(api):
     client = GhClient(api.get_config())
     created_list = []
 
-    for project in api.get_pending_github_create_repo():
+    for project in api.get_pending_github_create_repo_list():
         repo_name = project.repo_name
         try:
             log.info("Creating repo: {}".format(repo_name))
@@ -43,3 +43,5 @@ def create_github_repo(api):
             api.set_github_repo_created(project.id)
         except Exception as err:
             log.exception(err)
+    else:
+        log.debug("No projects to create github repo")

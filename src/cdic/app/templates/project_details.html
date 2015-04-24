@@ -54,19 +54,25 @@
 
             {% endif %}
 
-            <dt>Github auto-build repo</dt>
+            <dt>Auto-build:</dt>
             <dd>
               {% if project.github_repo_exists %}
                 <a href="{{ project.github_repo_url }}">
-                  {{ project.repo_name }}
+                  GitHub
                 </a>
               {% else %}
                 (not created yet)
               {% endif %}
             </dd>
 
-            <dt>Dockerhub auto-build</dt>
-            <dd> ... </dd>
+            <dt></dt>
+            <dd>
+              {% if project.dockerhub_repo_exists %}
+                <a href="{{ project.dockerhub_repo_url }}">
+                  DockerHub
+                </a>
+              {% endif %}
+            </dd>
 
 
 

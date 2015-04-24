@@ -79,7 +79,7 @@ class Project(db.Model):
 
     @property
     def repo_name(self):
-        return 'cdic_{}__{}'.format(self.user.username, self.title)
+        return 'cdic-{}--{}'.format(self.user.username, self.title).lower()
 
     @property
     def github_repo_url(self):
@@ -88,6 +88,18 @@ class Project(db.Model):
         else:
             return "/".join([app.config["GITHUB_URL"], app.config["GITHUB_USER"],
                              self.repo_name])
+
+    @property
+    def dockerhub_repo_url(self):
+        if not self.dockerhub_repo_exists:
+            return None
+        else:
+            return "/".join([
+                app.config["DOCKERREGISTRY_URL"],
+                "u",
+                app.config["DOCKERHUB_USERNAME"],
+                self.repo_name
+            ])
 
     @property
     def url_to_hub(self):

@@ -8,7 +8,7 @@ import flask
 from flask_script import Manager, Command, Option, Group
 
 from app import app, db
-from app.api import Api
+from app.internal_api import Api
 
 from util.dockerhub import create_pending_repo
 from util.github import create_github_repo
@@ -23,8 +23,6 @@ def setup_logging(log_file_path):
         format='[%(asctime)s][%(name)s][%(levelname)6s]: %(message)s',
         level=logging.DEBUG
     )
-
-
 
 
 class CreateSqliteFileCommand(Command):
@@ -88,7 +86,7 @@ class RunAsyncTasks(Command):
 
         api = Api()
         create_github_repo(api)
-        # create_pending_repo(api)
+        create_pending_repo(api)
 
 
 manager.add_command("create_sqlite_file", CreateSqliteFileCommand())

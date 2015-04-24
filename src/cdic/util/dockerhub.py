@@ -190,10 +190,18 @@ def create_pending_repo(api):
     :param api: Api to cdic service, see cdic.app.api:Api class
     :type: ..app.api.Api
     """
-    pending_repo_list = api.get_pending_docker_create_repo()
-    log.info("create_pending_repo invoked, pending:{}"
-             .format(pending_repo_list))
+    projects_list = api.get_pending_docker_create_repo_list()
+    repo_name_list = list([prj.repo_name for prj in projects_list])
+    if not repo_name_list:
+        log.debug("No projects to create docker hub repo")
+        return
 
-    creator = Creator(api.get_config(), pending_repo_list)
+    log.info("create_pending_repo invoked, pending:{}"
+             .format(repo_name_list))
+
+    creator = Creator(api.get_config(), repo_name_list)
     created_repo_list = creator.run()
-    api.set_docker_repo_created(created_repo_list)
+
+    name_to_project_id = {prj.repo_name: prj.id for prj in projects_list }
+    for name in created_repo_list:
+        api.set_docker_repo_created(name_to_project_id[name])
