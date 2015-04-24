@@ -51,7 +51,22 @@
             <dt>Dockerfile path</dt>
             <dd>{{ project.dockerfile_path|default("/") }}</dd>
 
+
             {% endif %}
+
+            <dt>Github auto-build repo</dt>
+            <dd>
+              {% if project.github_repo_exists %}
+                <a href="{{ project.github_repo_url }}">
+                  {{ project.repo_name }}
+                </a>
+              {% else %}
+                (not created yet)
+              {% endif %}
+            </dd>
+
+            <dt>Dockerhub auto-build</dt>
+            <dd> ... </dd>
 
 
 
@@ -64,7 +79,7 @@
     <div class="col-xs-12 col-md-6">
       <div class="panel panel-default">
         <div class="panel-heading">
-          <b>Builds</b>
+          <b>Activity</b>
         </div>
         <div class="panel-body">
           <dl class="dl-horizontal">

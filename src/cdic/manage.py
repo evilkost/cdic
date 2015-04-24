@@ -88,7 +88,7 @@ class RunAsyncTasks(Command):
 
         api = Api()
         create_github_repo(api)
-        create_pending_repo(api)
+        # create_pending_repo(api)
 
 
 manager.add_command("create_sqlite_file", CreateSqliteFileCommand())
@@ -99,4 +99,3 @@ manager.add_command("run_async_tasks", RunAsyncTasks())
 
 if __name__ == '__main__':
     manager.run()
-

@@ -33,10 +33,13 @@ class GhClient(object):
 def create_github_repo(api):
     client = GhClient(api.get_config())
     created_list = []
-    for title in api.get_pending_github_create_repo():
+
+    for project in api.get_pending_github_create_repo():
+        repo_name = project.repo_name
         try:
-            client.create_repo(title)
-            created_list.append(title)
+            log.info("Creating repo: {}".format(repo_name))
+            client.create_repo(repo_name)
+            created_list.append(repo_name)
+            api.set_github_repo_created(project.id)
         except Exception as err:
             log.exception(err)
-    api.set_github_repo_created(created_list)

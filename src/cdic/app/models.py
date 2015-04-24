@@ -74,6 +74,21 @@ class Project(db.Model):
     local_text = db.Column(db.Text)
     git_url = db.Column(db.Text)
 
+    github_repo_exists = db.Column(db.Boolean, default=False)
+    dockerhub_repo_exists = db.Column(db.Boolean, default=False)
+
+    @property
+    def repo_name(self):
+        return 'cdic_{}__{}'.format(self.user.username, self.title)
+
+    @property
+    def github_repo_url(self):
+        if not self.github_repo_exists:
+            return None
+        else:
+            return "/".join([app.config["GITHUB_URL"], app.config["GITHUB_USER"],
+                             self.repo_name])
+
     @property
     def url_to_hub(self):
         return app.config["HUB_PROJECT_URL_TEMPLATE"].format(
@@ -83,6 +98,6 @@ class Project(db.Model):
     def dockerfile_preview(self) -> str:
         if self.source_mode != SourceType.LOCAL_TEXT:
             # todo: save to cache during build, and return when availble
-            return None
+            return ""
         else:
-            return self.local_text
+            return self.local_text or ""
