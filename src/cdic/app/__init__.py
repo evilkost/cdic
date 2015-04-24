@@ -18,9 +18,11 @@ db.init_app(app)
 
 from .views.main import main_bp
 from .views.auth import auth_bp
+from .views.copr import copr_bp
 
 app.register_blueprint(main_bp)
 app.register_blueprint(auth_bp)
+app.register_blueprint(copr_bp)
 
 @app.route('/api/help', methods=['GET'])
 def help():

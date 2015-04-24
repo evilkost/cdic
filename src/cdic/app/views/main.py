@@ -54,6 +54,7 @@ def project_create_view(form=None):
 
 
 @main_bp.route("/projects/add", methods=["POST"])
+@login_required
 def project_create_handle():
     form = ProjectForm()
     if form.validate_on_submit():
@@ -66,6 +67,7 @@ def project_create_handle():
 
 
 @main_bp.route("/projects/edit/<project_id>", methods=["GET", "POST"])
+@login_required
 def project_edit(project_id):
     project = get_project_by_id(int(project_id))
     form = ProjectForm(obj=project)

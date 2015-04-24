@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block inner_content %}
+
+  <h1> Linking coprs to project:
+    <a href="{{ url_for('main.project_details', project_id=project.id) }}">
+      {{ project.title }}
+    </a>
+  </h1>
+
+  <div class="row">
+    <div class="col-xs-12 col-md-8">
+
+      <form class="form form-horizontal" method="post" role="form">
+        {{ form.hidden_tag() }}
+        {{ wtf.form_errors(form, hiddens="only") }}
+
+        <label class="control-label" for="copr_name">
+          {{ form.copr_name.label }}
+        </label>
+        <div class="input-group">
+          {{ form.copr_name(class='form-control') }}
+          <span class="input-group-btn">
+            <button type="submit" class="btn btn-default" name="btn" value="add_by_name">Add</button>
+          </span>
+        </div>
+
+        <hr />
+        <h3>Search UI not implemented yet</h3>
+        <!--{{ wtf.form_field(form.query) }}-->
+        <!--<button type="submit" class="btn btn-default" name="btn" value="search">Search</button>-->
+      </form>
+    </div>
+
+
+    <div class="col-xs-12 col-md-4">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+            Enabled coprs
+        </div>
+        <div class="panel-body">
+          <ul class="list-group">
+          {% for copr_link in project.linked_coprs %}
+            <li class="list-group-item">
+              <a href="{{ copr_link.copr_url }}">
+                {{ copr_link.full_name }}
+              </a>
+              <a class="pull-right btn btn-danger btn-xs"
+                 href="{{ url_for('copr.unlink', project_id=project.id, link_id=copr_link.id) }}">
+                <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                Unlink
+              </a>
+            </li>
+          {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

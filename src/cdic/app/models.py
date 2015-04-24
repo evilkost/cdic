@@ -2,6 +2,9 @@
 
 import datetime
 
+
+from sqlalchemy import UniqueConstraint
+
 # VV todo: looks like it import DNS but py3 version should be dns
 # from libravatar import libravatar_url
 
@@ -113,3 +116,29 @@ class Project(db.Model):
             return ""
         else:
             return self.local_text or ""
+
+
+class LinkedCopr(db.Model):
+
+    __tablename__ = "linked_copr"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    project_id = db.Column(db.Integer, db.ForeignKey("project.id"))
+    project = db.relationship("Project", backref=db.backref("linked_coprs", lazy="dynamic"))
+
+    created_on = db.Column(db.DateTime, default=db.func.now())
+
+    coprname = db.Column(db.String(120))
+    username = db.Column(db.String(120))
+
+    UniqueConstraint('project_id', 'username', 'coprname',  name='uix_1')
+
+    @property
+    def full_name(self):
+        return "{}/{}".format(self.username, self.coprname)
+
+    @property
+    def copr_url(self):
+        return "/".join([app.config["COPR_BASE_URL"], "coprs",
+                        self.username, self.coprname])
