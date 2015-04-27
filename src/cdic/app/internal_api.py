@@ -18,7 +18,10 @@ class Api(object):
         """
         :return: iterable of Project
         """
-        return Project.query.filter(Project.github_repo_exists == false())
+        return (Project.query
+                .filter(Project.build_is_running == true())  # don't create repo
+                                                             # until first build
+                .filter(Project.github_repo_exists == false()))
 
 
     @staticmethod

@@ -13,7 +13,8 @@ from ..views.auth import login_required
 from ..logic.user_logic import get_user_by_name
 from ..logic.copr_logic import create_link, get_link_by_id
 from ..logic.project_logic import add_project_from_form, get_projects_by_user, \
-    get_all_projects_query, get_project_by_id, update_project_from_form, create_project_event
+    get_all_projects_query, get_project_by_id, update_project_from_form, update_patched_dockerfile
+from ..logic.event_logic import create_project_event
 from ..forms.copr import CoprSearchLinkForm
 
 copr_bp = Blueprint("copr", __name__)
@@ -39,7 +40,8 @@ def search_and_link(project_id):
                                              "Linked copr: {}/{}".format(username, coprname),
                                              data_json=json.dumps(form.data),
                                              event_type="created_link")
-                db.session.add_all([cl, event])
+                update_patched_dockerfile(project)
+                db.session.add_all([cl, event, project])
                 db.session.commit()
                 # return redirect(url_for("main.project_details", project_id=project_id))
             else:
@@ -58,7 +60,9 @@ def unlink(project_id, link_id):
             "Removed linked copr: {}/{}".format(link.username, link.coprname),
             data_json=json.dumps({"id": link.id, "username": link.username, "coprname": link.coprname}),
             event_type="removed_link")
-        db.session.add(event)
+        project = link.project
+        update_patched_dockerfile(project)
+        db.session.add_all([project, event])
         db.session.delete(link)
         db.session.commit()
     return redirect(url_for("copr.search_and_link", project_id=project_id))

@@ -72,6 +72,9 @@ class Project(db.Model):
     created_on = db.Column(db.DateTime, default=db.func.now())
     updated_on = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
+    build_is_running = db.Column(db.Boolean, default=False)
+    local_repo_exists = db.Column(db.Boolean, default=False)
+    patched_dockerfile = db.Column(db.Text)
     source_mode = db.Column(db.String(40), default=SourceType.LOCAL_TEXT,
                             server_default=SourceType.LOCAL_TEXT)
     #  see .constants.SourceType
@@ -86,7 +89,7 @@ class Project(db.Model):
 
     @property
     def repo_name(self):
-        return 'cdic-{}--{}'.format(self.user.username, self.title).lower()
+        return 'cdic-{}-{}'.format(self.user.username, self.title).lower()
 
     @property
     def github_repo_url(self):
@@ -95,6 +98,16 @@ class Project(db.Model):
         else:
             return "/".join([app.config["GITHUB_URL"], app.config["GITHUB_USER"],
                              self.repo_name])
+    @property
+    def github_push_url(self):
+        if not self.github_repo_exists:
+            return None
+        else:
+            return "{}:{}/{}".format(
+                app.config["GITHUB_PUSH_URL"],
+                app.config["GITHUB_USER"],
+                self.repo_name
+            )
 
     @property
     def dockerhub_repo_url(self):
@@ -112,14 +125,6 @@ class Project(db.Model):
     def url_to_hub(self):
         return app.config["HUB_PROJECT_URL_TEMPLATE"].format(
             username=self.user.username, project_id=self.id)
-
-    @property
-    def dockerfile_preview(self) -> str:
-        if self.source_mode != SourceType.LOCAL_TEXT:
-            # todo: save to cache during build, and return when availble
-            return ""
-        else:
-            return self.local_text or ""
 
     @property
     def recent_events(self):

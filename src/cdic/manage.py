@@ -8,6 +8,7 @@ import flask
 from flask_script import Manager, Command, Option, Group
 
 from app import app, db
+from app.builder import run_builds
 from app.internal_api import Api
 
 from util.dockerhub import create_pending_repo
@@ -87,6 +88,8 @@ class RunAsyncTasks(Command):
         api = Api()
         create_github_repo(api)
         create_pending_repo(api)
+
+        run_builds()
 
 
 manager.add_command("create_sqlite_file", CreateSqliteFileCommand())

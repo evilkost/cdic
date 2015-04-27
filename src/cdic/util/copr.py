@@ -19,3 +19,5 @@ def search_coprs(config, query):
     return result.get("repos", [])
 
 
+def check_copr_existence(config, copr_name) -> bool:
+    raise NotImplementedError()

@@ -9,3 +9,9 @@ class SourceType(object):
     @classmethod
     def get_all_options(cls):
         return [cls.LOCAL_TEXT, cls.GIT_URL]
+
+
+class EventType(object):
+
+    BUILD_REQUESTED = "build_requested"
+

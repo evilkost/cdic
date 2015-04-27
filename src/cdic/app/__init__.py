@@ -1,10 +1,12 @@
 # coding: utf-8
 
 import os
+import sys
 from flask import Flask, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
 
+sys.path.append("..")
 from cdic.util.git import GitStore
 
 app = Flask(__name__)

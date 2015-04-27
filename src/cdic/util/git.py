@@ -65,9 +65,9 @@ class GitStore(object):
         self.check_git_exists(repo)
         return Repo(repo)
 
-    def add_remote_by_name(self, username, projectname, remote_git_url, remote_name):
-        repo = self.get_existing_repo(username, projectname)
-        self.add_remote(repo, remote_git_url, remote_name)
+    # def add_remote_by_name(self, username, projectname, remote_git_url, remote_name):
+    #     repo = self.get_existing_repo(username, projectname)
+    #     self.add_remote(repo, remote_git_url, remote_name)
 
     @staticmethod
     def _get_remote(repo, remote_name):
@@ -108,10 +108,20 @@ class GitStore(object):
 
         return rem.push(refspec)
 
+
+
+    @staticmethod
+    def initial_commit(repo: Repo, to_commit: "List[str]",  message: str=None):
+        repo.index.add(to_commit)
+        msg = message or "Initial commit of {}".format(", ".join(to_commit))
+        repo.index.commit(msg)
+
+
     @staticmethod
     def commit_changes(repo: Repo, to_commit: "List[str]",  message: str=None):
+        # TODO: doesn't exists before the first commit, handle exception here
+        # if repo.head.commit.diff():
         repo.index.add(to_commit)
-        # if repo.head.commit.diff():  # TODO: doesn't exists before the first commit
         msg = message or "Autocommit of {}".format(", ".join(to_commit))
         repo.index.commit(msg)
         # else:

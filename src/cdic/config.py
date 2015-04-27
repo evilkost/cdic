@@ -26,5 +26,7 @@ GITHUB_TOKEN = "FILL GITHUB TOKEN"
 GITHUB_USER = "FILL GITHUB USER"
 GITHUB_API_ROOT = "https://api.github.com"
 GITHUB_URL = "https://github.com"
+# git@github.com:cdic-test/cdic_vgologuz__Foobar.git
+GITHUB_PUSH_URL = "git://github.com"
 
 COPR_BASE_URL = "https://copr.fedoraproject.org"
