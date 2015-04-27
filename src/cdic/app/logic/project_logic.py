@@ -3,8 +3,9 @@
 from flask import abort
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.query import Query
+from sqlalchemy.event import listens_for
 
-from ..models import Project, User
+from ..models import Project, User, ProjectEvent
 from ..forms.project import ProjectForm
 
 
@@ -57,3 +58,15 @@ def update_project_from_form(project: Project, form: ProjectForm) -> Project:
     project.source_mode = form.source_mode.data
     project.local_text = form.local_text.data
     project.git_url = form.git_url.data
+
+
+def create_project_event(project: Project, text,
+                         data_json=None, event_type=None) -> ProjectEvent:
+    event = ProjectEvent(project=project, human_text=text)
+
+    if data_json:
+        event.optional_data_json = data_json
+    if event_type:
+        event.optional_event_type = event_type
+
+    return event

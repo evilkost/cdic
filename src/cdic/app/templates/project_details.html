@@ -97,16 +97,15 @@
     <div class="col-xs-12 col-md-6">
       <div class="panel panel-default">
         <div class="panel-heading">
-          <b>Activity</b>
+          <b>Activity log</b>
         </div>
         <div class="panel-body">
           <dl class="dl-horizontal">
-            <h4>Not implemented yet</h4>
-            <dt>5 min ago</dt>
-            <dd>Build failed: foo bar</dd>
+            {% for event in  project.recent_events.limit(10).all() %}
+              <dt>{{ event.created_on | time_ago}}: </dt>
+              <dd>{{ event.human_text }} </dd>
+            {% endfor %}
 
-            <dt>15 min ago</dt>
-            <dd>Project created</dd>
 
           </dl>
         </div>

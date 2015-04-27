@@ -4,7 +4,8 @@ import os
 from flask import Flask, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
-from util.git import GitStore
+
+from cdic.util.git import GitStore
 
 app = Flask(__name__)
 
@@ -18,6 +19,8 @@ git_store = GitStore(app.config["CDIC_WORKPLACE"])
 
 db = SQLAlchemy()
 db.init_app(app)
+
+from .filters import time_ago
 
 from .views.main import main_bp
 from .views.auth import auth_bp

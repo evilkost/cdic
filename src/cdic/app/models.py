@@ -5,6 +5,7 @@ import datetime
 
 from sqlalchemy import UniqueConstraint
 
+
 # VV todo: looks like it import DNS but py3 version should be dns
 # from libravatar import libravatar_url
 
@@ -76,6 +77,9 @@ class Project(db.Model):
     #  see .constants.SourceType
     local_text = db.Column(db.Text)
     git_url = db.Column(db.Text)
+    # todo: later: git_source_sub_path, default "" // extract only sub dir
+    # todo: git_source_branch, default "master"
+    # todo: git_source_last_updated = db.Column(db.Boolean, nullable=True
 
     github_repo_exists = db.Column(db.Boolean, default=False)
     dockerhub_repo_exists = db.Column(db.Boolean, default=False)
@@ -117,6 +121,10 @@ class Project(db.Model):
         else:
             return self.local_text or ""
 
+    @property
+    def recent_events(self):
+        return self.history_events.order_by(ProjectEvent.created_on.desc())
+
 
 class LinkedCopr(db.Model):
 
@@ -142,3 +150,21 @@ class LinkedCopr(db.Model):
     def copr_url(self):
         return "/".join([app.config["COPR_BASE_URL"], "coprs",
                         self.username, self.coprname])
+
+
+class ProjectEvent(db.Model):
+
+    __tablename__ = "project_event"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    project_id = db.Column(db.Integer, db.ForeignKey("project.id"))
+    project = db.relationship("Project", backref=db.backref("history_events", lazy="dynamic"))
+
+    created_on = db.Column(db.DateTime, default=db.func.now())
+
+    human_text = db.Column(db.Text)
+
+    optional_data_json = db.Column(db.Text)
+    optional_event_type = db.Column(db.String(32))
+
