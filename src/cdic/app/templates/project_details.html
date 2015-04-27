@@ -43,10 +43,15 @@
                   {{ copr.full_name }}
                 </a>
               </dd>
+            {% else %}
+            <dd>(no linked coprs)</dd>
             {% endfor %}
-
             <dt>Hub address</dt>
-            <dd><a href="{{ project.url_to_hub }}">{{ project.url_to_hub }}</a></dd>
+            <dd>
+              <a href="{{ project.url_to_hub }}">
+                {{ project.url_to_hub }}
+              </a>
+            </dd>
 
             <dt>Source type</dt>
             <dd>{{ project.source_mode }}</dd>
@@ -96,9 +101,12 @@
         </div>
         <div class="panel-body">
           <dl class="dl-horizontal">
-
+            <h4>Not implemented yet</h4>
             <dt>5 min ago</dt>
-            <dd>failed</dd>
+            <dd>Build failed: foo bar</dd>
+
+            <dt>15 min ago</dt>
+            <dd>Project created</dd>
 
           </dl>
         </div>

@@ -13,19 +13,14 @@ DATABASE_CONNECT_OPTIONS = {}
 CSRF_ENABLED = True
 CSRF_SESSION_KEY = "somethingimpossibletoguess"
 
-
 OPENID_STORE = "/tmp/cdic/openid/"
-
 CDIC_WORKPLACE = "/tmp/cdic/wp"
-COPR_FRONTEND_URL = "http://copr.fedoraproject.org"  # base url to the copr instance
-
-HUB_PROJECT_URL_TEMPLATE = "http://localhost/cdic_{username}_{project_id}"
-
 
 DOCKERHUB_URL = 'https://hub.docker.com'
 DOCKERREGISTRY_URL = 'https://registry.hub.docker.com'
 DOCKERHUB_USERNAME = 'FILL DOCKER USERNAME'
 DOCKERHUB_PASSWORD = 'FILL DOCKER PASSWORD'
+HUB_PROJECT_URL_TEMPLATE = "http://registry.hub.docker.com/u/FILL DOCKER USERNAME AGAIN/cdic-{username}-{project_id}"
 
 GITHUB_TOKEN = "FILL GITHUB TOKEN"
 GITHUB_USER = "FILL GITHUB USER"

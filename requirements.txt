@@ -11,6 +11,7 @@ python-dateutil
 pyLibravatar
 # pydns
 requests
+gitpython
 
 tox
 pytest

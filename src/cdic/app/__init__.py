@@ -4,14 +4,17 @@ import os
 from flask import Flask, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
+from util.git import GitStore
 
 app = Flask(__name__)
 
 # oid = OpenID(app, app.config["OPENID_STORE"], safe_roots=[])
 app.config.from_pyfile("../config.py")
 app.config.from_pyfile(os.path.expanduser("~/.config/cdic.py"))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+
 Bootstrap(app)
+
+git_store = GitStore(app.config["CDIC_WORKPLACE"])
 
 db = SQLAlchemy()
 db.init_app(app)
@@ -25,7 +28,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(copr_bp)
 
 @app.route('/api/help', methods=['GET'])
-def help():
+def help_urls():
     """Print available functions."""
     func_list = {}
     for rule in app.url_map.iter_rules():

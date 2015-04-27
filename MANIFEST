@@ -4,3 +4,5 @@ requirements.txt
 setup.py
 src/cdic/__init__.py
 src/cdic/config.py
+src/cdic/exceptions.py
+src/cdic/manage.py

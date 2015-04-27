@@ -9,12 +9,12 @@
 
     <input type="hidden" name="title" value="{{ project.title }}" />
 
-    <div class="form-group ">
-      <label class="control-label" for="source_mode">
-        Select source mode for project
-      </label>
-      {{ wtf.form_field(form.source_mode) }}
-    </div>
+    <!--<div class="form-group ">-->
+      <!--<label class="control-label" for="source_mode">-->
+        <!--Select source mode for project-->
+      <!--</label>-->
+      <!--{{ wtf.form_field(form.source_mode) }}-->
+    <!--</div>-->
 
     {% if project.source_mode == "local_text" %}
       {{ wtf.form_field(form.local_text,rows=20) }}
