@@ -120,10 +120,15 @@ class GitStore(object):
     @staticmethod
     def commit_changes(repo: Repo, to_commit: "List[str]",  message: str=None):
         # TODO: doesn't exists before the first commit, handle exception here
+        # import ipdb; ipdb.set_trace()
         # if repo.head.commit.diff():
-        repo.index.add(to_commit)
-        msg = message or "Autocommit of {}".format(", ".join(to_commit))
-        repo.index.commit(msg)
+        if repo.is_dirty():
+            repo.index.add(to_commit)
+            msg = message or "Autocommit of {}".format(", ".join(to_commit))
+            repo.index.commit(msg)
+        else:
+            log.debug("Nothing to commit Repo: {}, to_commit: {}, message: {}"
+                      .format(repo, to_commit, message))
         # else:
         #     raise NothingToCommit("Repo: {}, to_commit: {}, message: {}"
         #                           .format(repo, to_commit, message))

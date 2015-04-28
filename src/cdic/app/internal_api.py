@@ -9,6 +9,7 @@ from sqlalchemy.sql import true, false
 from . import app, db
 from .models import User, Project
 from .logic.project_logic import get_project_by_id
+from .logic.event_logic import create_project_event
 
 
 class Api(object):
@@ -28,7 +29,9 @@ class Api(object):
     def set_github_repo_created(ident: int):
         prj = get_project_by_id(ident)
         prj.github_repo_exists = True
-        db.session.add(prj)
+
+        pe = create_project_event(prj, "Created github repo")
+        db.session.add_all([prj, pe])
         db.session.commit()
 
     @staticmethod
@@ -47,5 +50,7 @@ class Api(object):
     def set_docker_repo_created(ident: int):
         prj = get_project_by_id(ident)
         prj.dockerhub_repo_exists = True
-        db.session.add(prj)
+
+        pe = create_project_event(prj, "Created dockerhub automated build")
+        db.session.add_all([prj, pe])
         db.session.commit()

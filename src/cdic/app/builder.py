@@ -27,7 +27,7 @@ def update_local_repo_and_push(project: Project):
         gs.commit_changes(repo, ["Dockerfile"])
         gs.push_remote(repo)
 
-        pe = create_project_event(project, "new version pushed to github")
+        pe = create_project_event(project, "New version pushed to github")
         db.session.add_all([pe])
 
     else:
@@ -46,7 +46,7 @@ def init_local_repo(project: Project):
 
         project.local_repo_exists = True
 
-        pe = create_project_event(project, "created local repo")
+        pe = create_project_event(project, "Created local repo")
         db.session.add_all([pe, project])
         db.session.commit()
 

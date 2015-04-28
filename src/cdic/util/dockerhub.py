@@ -185,7 +185,7 @@ class Creator(object):
         return self.create_done_list
 
 
-def create_pending_repo(api):
+def create_pending_dockerhub(api):
     """
     :param api: Api to cdic service, see cdic.app.api:Api class
     :type: ..app.api.Api

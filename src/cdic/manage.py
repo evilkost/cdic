@@ -11,7 +11,7 @@ from app import app, db
 from app.builder import run_builds
 from app.internal_api import Api
 
-from util.dockerhub import create_pending_repo
+from util.dockerhub import create_pending_dockerhub
 from util.github import create_github_repo
 
 manager = Manager(app)
@@ -87,9 +87,10 @@ class RunAsyncTasks(Command):
 
         api = Api()
         create_github_repo(api)
-        create_pending_repo(api)
-
         run_builds()
+        create_pending_dockerhub(api)
+
+
 
 
 manager.add_command("create_sqlite_file", CreateSqliteFileCommand())

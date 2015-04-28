@@ -66,6 +66,7 @@ def project_create_handle():
     form = ProjectForm()
     if form.validate_on_submit():
         project = add_project_from_form(g.user, form)
+        project.local_text = "FROM fedora:latest \n"
         event = create_project_event(project, "Created")
         db.session.add_all([project, event])
         db.session.commit()
@@ -90,6 +91,8 @@ def project_edit(project_id):
         update_patched_dockerfile(project)
         db.session.add_all([project, event])
         db.session.commit()
+        flash("Project was altered", "success")
+
         if old_source_mode == project.source_mode:
             # if not user should source fields
             return redirect(url_for("main.project_details", project_id=project.id))
@@ -113,5 +116,5 @@ def project_start_build(project_id):
 
     db.session.add_all([project, build_event])
     db.session.commit()
-
+    flash("Build started", "success")
     return redirect(url_for("main.project_details", project_id=project.id))

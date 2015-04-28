@@ -18,7 +18,7 @@ class ProjectForm(Form):
                              choices=[(x, x.replace("_", " ").capitalize()) for x in SourceType.get_all_options()],
                              default=SourceType.LOCAL_TEXT)
 
-    local_text = TextAreaField(default="")
+    local_text = TextAreaField()
 
     git_url = URLField("Git source url")
     dockerfile_path = StringField()
