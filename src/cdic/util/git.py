@@ -95,8 +95,6 @@ class GitStore(object):
         :param remote_branch: default `master`
         """
         remote_name = remote_name or "origin"
-
-
         rem = cls._get_remote(repo, remote_name)
         if rem is None:
             raise RemoteUndefined("Repo `{}` doesn't have a remote: {}"
@@ -106,7 +104,7 @@ class GitStore(object):
         remote_branch = remote_branch or "master"
         refspec = "{}:{}".format(local_branch, remote_branch)
 
-        return rem.push(refspec)
+        return rem.push(refspec, force=True)
 
 
 

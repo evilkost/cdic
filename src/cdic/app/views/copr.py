@@ -55,13 +55,14 @@ def search_and_link(project_id):
 def unlink(project_id, link_id):
     link = get_link_by_id(link_id)
     if link:
+        project = link.project
+        update_patched_dockerfile(project)
+
         event = create_project_event(
             link.project,
             "Removed linked copr: {}/{}".format(link.username, link.coprname),
             data_json=json.dumps({"id": link.id, "username": link.username, "coprname": link.coprname}),
             event_type="removed_link")
-        project = link.project
-        update_patched_dockerfile(project)
         db.session.add_all([project, event])
         db.session.delete(link)
         db.session.commit()

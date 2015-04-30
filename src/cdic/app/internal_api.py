@@ -52,5 +52,12 @@ class Api(object):
         prj.dockerhub_repo_exists = True
 
         pe = create_project_event(prj, "Created dockerhub automated build")
+
+        if prj.build_is_running:
+            # first ever build,
+            pe2 = create_project_event(prj, "Build request passed to Dockerhub, wait for result")
+            db.session.add(pe2)
+            prj.build_is_running = False
+
         db.session.add_all([prj, pe])
         db.session.commit()

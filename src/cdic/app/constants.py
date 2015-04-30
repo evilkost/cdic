@@ -14,4 +14,5 @@ class SourceType(object):
 class EventType(object):
 
     BUILD_REQUESTED = "build_requested"
+    WEBHOOK_CALLED = "webhook_called"
 

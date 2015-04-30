@@ -1,15 +1,17 @@
 # coding: utf-8
+import datetime
 from io import StringIO
 import os
 
 from flask import abort
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.query import Query
-from sqlalchemy.sql import true
+from sqlalchemy.sql import true, and_, or_
 
+from .. import app
 from ..constants import SourceType
 
-from ..exceptions import PatchDockerfileException
+from ..exceptions import PatchDockerfileException, FailedToFindProjectByDockerhubName
 from ..models import Project, User
 from ..forms.project import ProjectForm
 
@@ -40,8 +42,41 @@ def get_project_by_id(ident: int) -> Project:
     return Project.query.get(ident)
 
 
+def get_project_by_dockerhub_name(name: str) -> Project:
+    prefix =app.config["REPO_PREFIX"]
+    if not name.startswith(prefix):
+        raise FailedToFindProjectByDockerhubName(
+            "Name should start with `{}`, got: {}".format(prefix, name))
+    rest = name.replace(prefix, "")
+    parts = rest.split(sep="-", maxsplit=1)
+    if len(parts) < 2:
+        raise FailedToFindProjectByDockerhubName(
+            "Got malformed dockerhub name".format(name))
+    username, title = parts
+    return (
+        Project.query
+        .join(User)
+        .filter(User.username == username)
+        .filter(Project.title == title)
+    ).one()
+
+
 def get_running_projects() -> "List[Project]":
     return Project.query.filter(Project.build_is_running == true())
+
+
+def get_project_waiting_for_push() -> "List[Project]":
+    return (
+        Project.query
+        .filter(Project.build_is_running == true())  # just to be sure,
+        # we write content to the file only after the  user press `Run Build`
+        .filter(Project.github_repo_exists)
+        .filter(Project.local_repo_changed_on.isnot(None))
+        .filter(or_(
+            Project.local_repo_pushed_on.is_(None),
+            Project.local_repo_changed_on > Project.local_repo_pushed_on
+        ))
+    )
 
 
 def exists_for_user(user: User, title: str) -> bool:
@@ -132,4 +167,5 @@ def update_patched_dockerfile(project: Project):
                                   .format(project.source_mode))
 
     project.patched_dockerfile = patched
+    project.local_repo_changed_on = datetime.datetime.utcnow()
     return project

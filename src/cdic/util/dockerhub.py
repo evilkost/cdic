@@ -1,72 +1,91 @@
 # coding: utf-8
 
-
-#!/usr/bin/python3
-# coding: utf-8
-
 import sys
 import time
 
 from functools import partial
 import logging
 
+from urllib.parse import urljoin
+from dateutil.parser import parse as dt_parse
 
+
+from robobrowser import RoboBrowser
 
 log = logging.getLogger(__name__)
 
 logging.getLogger("requests").setLevel(logging.WARN)
 
-from robobrowser import RoboBrowser
+#
+#
+# class MechanizeProvider(object):
+#     """
+#     Need this, to be able replace RoboBrowser if needed
+#     """
+#
+#     def __init__(self, timeout, retries):
+#         self.timeout = timeout
+#         self.retries = retries
+#
+#     def open_url(self, url):
+#         pass
+#
+#     def open_link_by_text(self, text):
+#         """
+#         Should find a link (tag <a>) with given text and go to it
+#         """
+#         pass
+#
+#     def reset_browser(self):
+#         pass
+#
+#     def get_status(self) -> int:
+#         pass
+#
+#     def find_and_fill_form(self, url: str, form_id: str, form_fields: dict):
+#         """
+#         :param dict form_fields: field_name -> value
+#         """
+#         pass
 
 
-class MechanizeProvider(object):
-    """
-    Need this, to be able replace RoboBrowser if needed
-    """
+# class RBP(MechanizeProvider):
+class RBP(object):
 
-    def __init__(self, timeout, retries):
+    def __init__(self,  timeout=10, retries=2):
         self.timeout = timeout
         self.retries = retries
 
-    def open_url(self, url):
-        pass
-
-    def reset_browser(self):
-        pass
-
-    def get_status(self) -> int:
-        pass
-
-    def find_and_fill_form(self, url: str, form_id: str, form_fields: dict):
-        """
-        :param dict form_fields: field_name -> value
-        """
-        pass
-
-
-class RBP(MechanizeProvider):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.br = None
+        self.browser = None
         self.reset_browser()
 
     def reset_browser(self):
-        self.br = RoboBrowser(
-            history=True, timeout=self.timeout, tries=self.retries,
+        self.browser = RoboBrowser(
+            history=True, timeout=self.timeout,
+            tries=self.retries + 1,  # rb bug
             allow_redirects=False
         )
         log.info("Got new RB instance")
 
     def open_url(self, url):
         log.info("< trying to open: {}".format(url))
-        self.br.open(url)
-        log.info("> {}".format(self.br.response.status_code))
+        self.browser.open(url)
+        log.info("> {}".format(self.browser.response.status_code))
         self.follow_redirect()
 
+    def open_link_by_text(self, text):
+        try:
+            a = self.browser.get_link(text)
+            path = a.attrs["href"]
+            go_to = urljoin(self.browser.url, path)
+            self.open_url(go_to)
+        except Exception:
+            log.exception("Failed to find a link with text: {}".format(text))
+            raise
+
     def follow_redirect(self):
-        if self.status == 302:
-            redir_to = self.br.response.headers["Location"]
+        if self.status in [301, 302]:
+            redir_to = self.browser.response.headers["Location"]
             log.info("Following redirect: {}".format(redir_to))
             self.insert_referer()
             self.open_url(redir_to)
@@ -76,37 +95,37 @@ class RBP(MechanizeProvider):
         return self.get_status()
 
     def get_status(self):
-        return self.br.response.status_code
+        return self.browser.response.status_code
 
     def insert_referer(self):
-        self.br.session.headers["Referer"] = self.br.url
+        self.browser.session.headers["Referer"] = self.browser.url
 
     def find_and_fill_form(self, url, form_id, form_fields):
         log.info("< opening login page: {}".format(url))
-        self.br.open(url)
-        log.info("> {}".format(self.br.response.status_code))
+        self.browser.open(url)
+        log.info("> {}".format(self.browser.response.status_code))
         self.follow_redirect()
 
-        form = self.br.get_form(id=form_id)
+        form = self.browser.get_form(id=form_id)
         for field_name, value in form_fields.items():
             form[field_name].value = value
 
         self.insert_referer()
         log.info("< submitting  form: {}".format(form))
-        self.br.submit_form(form)
-        log.info("> {}".format(self.br.response.status_code))
+        self.browser.submit_form(form)
+        log.info("> {}".format(self.browser.response.status_code))
         self.follow_redirect()
 
 
-def mp_fabric(name, *args, **kwargs) -> MechanizeProvider:
-    klass = None
-    if name == "RoboBrowser":
-        klass = RBP
-
-    if klass is None:
-        raise NotImplementedError("RBP `{}` not implemented yet".format(name))
-    else:
-        return klass(*args, **kwargs)
+# def mp_fabric(name, *args, **kwargs) -> MechanizeProvider:
+#     klass = None
+#     if name == "RoboBrowser":
+#         klass = RBP
+#
+#     if klass is None:
+#         raise NotImplementedError("RBP `{}` not implemented yet".format(name))
+#     else:
+#         return klass(*args, **kwargs)
 
 
 class Creator(object):
@@ -118,7 +137,7 @@ class Creator(object):
         self.timeout = 10
         self.tries = 3
 
-        self.br = mp_fabric("RoboBrowser", self.timeout, self.tries)
+        self.br = RBP(timeout=self.timeout, retries=self.tries)
 
         self.username = app_config["DOCKERHUB_USERNAME"]
         self.password = app_config["DOCKERHUB_PASSWORD"]
@@ -183,6 +202,30 @@ class Creator(object):
             log.error("Failed to create")
 
         return self.create_done_list
+
+
+def get_builds_history(api, repo_name: str):
+    config = api.get_config()
+    br = RBP()
+
+    start_url = config["HUB_PROJECT_URL_TEMPLATE"].format(repo_name=repo_name)
+
+    br.open_url(start_url)
+    br.open_link_by_text("Build Details")
+    page = br.browser
+    table = page.find(text="Builds History").next
+
+    builds = []
+    for row in table.find_all("tr")[1:]:
+        fields = dict(enumerate(row.find_all("td")))
+        build = {
+            "build_id": fields[0].text,
+            "status": fields[1].text,
+            "created_on": dt_parse(fields[2].attrs["utc-date"]),
+            "updated_on": dt_parse(fields[3].attrs["utc-date"]),
+        }
+        builds.append(build)
+    return builds
 
 
 def create_pending_dockerhub(api):

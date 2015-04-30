@@ -36,7 +36,9 @@
           <b>Configuration</b>
         </div>
         <div class="panel-body">
-          <dl class="dl-horizontal">
+          <dl>
+              <!--class="dl-horizontal"-->
+
             <dt>Linked coprs</dt>
             {% for copr in project.linked_coprs %}
               <dd>
@@ -82,6 +84,21 @@
             <dt>Local repo</dt>
             <dd> {{ project.local_repo_exists }}</dd>
 
+            {% if project.dockerhub_build_status %}
+            <dt>Dockerhub auto-build status</dt>
+
+            <dd>
+              <span class="label label-info"> {{ project.dockerhub_build_status}} </span>
+              &nbsp;updated: {{ project.dockerhub_build_status_updated_on }}
+            </dd>
+            {% endif %}
+
+            <hr />
+
+            {% for k, v in project.__dict__.items() %}
+              <dt>{{k}}</dt>
+              <dd>{{v}}</dd>
+            {% endfor %}
             <!--<dt>Auto-build</dt>-->
             <!--<dd>disabled</dd>-->
           </dl>

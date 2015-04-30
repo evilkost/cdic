@@ -75,6 +75,14 @@ class Project(db.Model):
     build_is_running = db.Column(db.Boolean, default=False)
     local_repo_exists = db.Column(db.Boolean, default=False)
     patched_dockerfile = db.Column(db.Text)
+
+    build_started_on = db.Column(db.DateTime)
+    local_repo_changed_on = db.Column(db.DateTime)
+    local_repo_pushed_on = db.Column(db.DateTime)
+
+    dockerhub_build_status = db.Column(db.String(32))
+    dockerhub_build_status_updated_on = db.Column(db.String(32))
+
     source_mode = db.Column(db.String(40), default=SourceType.LOCAL_TEXT,
                             server_default=SourceType.LOCAL_TEXT)
     #  see .constants.SourceType
@@ -87,9 +95,13 @@ class Project(db.Model):
     github_repo_exists = db.Column(db.Boolean, default=False)
     dockerhub_repo_exists = db.Column(db.Boolean, default=False)
 
+    # @property
+    # def is_editable(self):
+    #     return not self.build_is_running
+
     @property
     def repo_name(self):
-        return 'cdic-{}-{}'.format(self.user.username, self.title).lower()
+        return '{}{}-{}'.format(app.config["REPO_PREFIX"], self.user.username, self.title).lower()
 
     @property
     def github_repo_url(self):
@@ -123,8 +135,7 @@ class Project(db.Model):
 
     @property
     def url_to_hub(self):
-        return app.config["HUB_PROJECT_URL_TEMPLATE"].format(
-            username=self.user.username, project_id=self.id)
+        return app.config["HUB_PROJECT_URL_TEMPLATE"].format(repo_name=self.repo_name)
 
     @property
     def recent_events(self):

@@ -3,6 +3,7 @@
 import os
 
 DEBUG = True
+REPO_PREFIX = "cdic-"
 
 ADMINS = frozenset(['nobody@example.com'])
 SECRET_KEY = 'This string will be replaced with a proper key in production.'
@@ -20,7 +21,7 @@ DOCKERHUB_URL = 'https://hub.docker.com'
 DOCKERREGISTRY_URL = 'https://registry.hub.docker.com'
 DOCKERHUB_USERNAME = 'FILL DOCKER USERNAME'
 DOCKERHUB_PASSWORD = 'FILL DOCKER PASSWORD'
-HUB_PROJECT_URL_TEMPLATE = "http://registry.hub.docker.com/u/FILL DOCKER USERNAME AGAIN/cdic-{username}-{project_id}"
+HUB_PROJECT_URL_TEMPLATE = "http://registry.hub.docker.com/u/FILL DOCKER USERNAME AGAIN/{repo_name}"
 
 GITHUB_TOKEN = "FILL GITHUB TOKEN"
 GITHUB_USER = "FILL GITHUB USER"
