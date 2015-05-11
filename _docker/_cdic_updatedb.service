@@ -1,0 +1,19 @@
+[Unit]
+Description=cdic update and db sync
+# Requires=postgresql.service # uncomment after added
+Requires=cdic_updatedb.serivce
+After=cdic_updatedb.serivce
+After=network.target
+
+
+[Service]
+User=cdic
+Group=cdic
+WorkingDirectory=/opt/cdic/src
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/opt/cdic/_docker/entry_point.sh
+
+
+[Install]
+WantedBy=multi-user.target

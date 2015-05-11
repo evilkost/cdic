@@ -11,3 +11,4 @@ alembic upgrade head
 
 cd /opt/cdic/src/cdic
 python3-gunicorn app:app -b '0.0.0.0:8080'
+# /usr/sbin/init

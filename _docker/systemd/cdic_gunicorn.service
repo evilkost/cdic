@@ -1,0 +1,20 @@
+[Unit]
+Description=gunicorn daemon
+# Requires=postgresql.service # uncomment after added
+# After=
+# Requires=cdic_gunicorn.socket
+After=network.target
+
+[Service]
+PIDFile=/run/cdic/pid
+User=cdic
+Group=cdic
+WorkingDirectory=/opt/cdic/src/cdic
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+ExecStartPre=/opt/cdic/_docker/first_run.sh
+ExecStart=/usr/bin/python3-gunicorn --pid /run/cdic/pid app:app -b 0.0.0.0:8000
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
