@@ -5,3 +5,7 @@ class PatchDockerfileException(Exception):
 
 class FailedToFindProjectByDockerhubName(Exception):
     pass
+
+
+class CoprSearchError(Exception):
+    pass

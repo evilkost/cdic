@@ -12,7 +12,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
-from cdic.util.dockerhub import get_builds_history
+from ..util.dockerhub import get_builds_history
 
 from .. import db
 from ..internal_api import Api

@@ -52,7 +52,7 @@ logging.getLogger("requests").setLevel(logging.WARN)
 # class RBP(MechanizeProvider):
 class RBP(object):
 
-    def __init__(self,  timeout=10, retries=2):
+    def __init__(self,  timeout=10, retries=1):
         self.timeout = timeout
         self.retries = retries
 
@@ -64,6 +64,7 @@ class RBP(object):
             history=True, timeout=self.timeout,
             tries=self.retries + 1,  # rb bug
             allow_redirects=False
+            # allow_redirects=True
         )
         log.info("Got new RB instance")
 
@@ -86,6 +87,7 @@ class RBP(object):
     def follow_redirect(self):
         if self.status in [301, 302]:
             redir_to = self.browser.response.headers["Location"]
+            log.debug("response headers: \n{}".format(self.browser.response.headers))
             log.info("Following redirect: {}".format(redir_to))
             self.insert_referer()
             self.open_url(redir_to)
@@ -226,6 +228,11 @@ def get_builds_history(api, repo_name: str):
         }
         builds.append(build)
     return builds
+
+
+def add_webhook():
+    # TODO: implement
+    pass
 
 
 def create_pending_dockerhub(api):

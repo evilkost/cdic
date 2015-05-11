@@ -12,6 +12,7 @@ pyLibravatar
 # pydns
 requests
 gitpython
+robobrowser
 
 tox
 pytest

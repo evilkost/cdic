@@ -4,7 +4,7 @@ import datetime
 import logging
 import os
 
-from cdic.util.git import GitStore
+from .util.git import GitStore
 
 from . import app, db
 from .constants import SourceType

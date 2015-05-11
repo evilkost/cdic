@@ -70,7 +70,7 @@ def create_or_login(resp):
     username = FasOID.to_raw_name(resp.identity_url)
     user = User.query.filter_by(username=username).first()
     if user is not None:
-        flash(u'Successfully signed in')
+        flash(u'Successfully signed in', "success")
         g.user = user
     else:
 
@@ -88,7 +88,7 @@ def create_or_login(resp):
 @auth_bp.route("/logout/")
 def logout():
     flask.session.pop("openid", None)
-    flask.flash(u"You were signed out")
+    flask.flash(u"You were signed out", "success")
     return flask.redirect(oid.get_next_url())
 
 
