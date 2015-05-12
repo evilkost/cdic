@@ -1,13 +1,18 @@
 # coding: utf-8
-from collections import defaultdict
-import logging
 
+from collections import defaultdict
+from functools import partial
+import logging
 import signal
+import time
 
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import asyncio
 from asyncio import coroutine, async, Future
-import time
+
+
+import asyncio_redis
+
 
 from app.util.github import create_github_repo
 from util import setup_logging
@@ -24,7 +29,7 @@ class PeriodicTask(object):
     :param period: minimal delay between two consecutive function invocation [seconds]
     :param cool_down: delay to start next invocation after previous one finished [seconds]
     """
-    def __init__(self, name: str, fn: "callable", period: int=None, cool_down: int=None):
+    def __init__(self, name: str, fn: callable, period: int=None, cool_down: int=None):
         self.name = name
         self.fn = fn
         self.period = period or 0
@@ -38,22 +43,47 @@ class PeriodicTask(object):
         return delay
 
 
+class OnDemandTask(object):
+    """
+    Represents tasks activated through message queue.
+    Firstly we setup task (function to invoke and function to parse mq payload)
+
+    :param name: task name
+    :param channel: name of the redis pub-sub channel to listen
+    :param fn: Target function to execute on receiving particular message
+    :param parser: Parser queue message into the `fn` parameters [msg => (args, kwargs)]
+    """
+    def __init__(self, name: str, channel: str, fn: callable, parser: callable=None):
+        self.name = name
+        self.channel = channel
+        self.fn = fn
+
+        def dummy_parser(msg):
+            return (), {}
+        self.parser = parser or dummy_parser
+
+
 class Runner(object):
     def __init__(self, app):
         self.app = app
         self.loop = asyncio.get_event_loop()
 
-        self.periodic_tasks = []
+        self.periodic_tasks = []  # List[PeriodicTask]
+        self.on_demand_tasks = {}  # {channel -> OnDemandTask}
 
         self.pool = ThreadPoolExecutor(6)
         # if we use dedicated processes we should setup centralized logging
         # self.pool = ProcessPoolExecutor(4)
+        self.redis_connection = None
 
         self.is_running = False
         self.finishing_future = Future()
 
     def add_periodic_task(self, name, task_fn, period, cool_down=None):
         self.periodic_tasks.append(PeriodicTask(name, task_fn, period, cool_down))
+
+    def add_on_demand_task(self, name: str, channel: str, fn: callable, parser: callable=None):
+        self.on_demand_tasks[channel] = OnDemandTask(name, channel, fn, parser)
 
     # @coroutine
     # def schedule_periodic_task(self, name, fn, period):
@@ -92,12 +122,49 @@ class Runner(object):
                 #     yield from asyncio.sleep(delay)
 
     @coroutine
+    def handle_on_demand(self, odt: OnDemandTask, data: str):
+        try:
+            args, kwargs = odt.parser(data)
+        except Exception:
+            log.exception("Failed to parse message from channel: {}, raw data: {}"
+                          .format(odt.channel, data))
+            return
+
+        ft = self.loop.run_in_executor(self.pool, partial(odt.fn, *args, **kwargs))
+        start_time = time.time()
+        log.debug("Executing on demand task: {}".format(odt.name))
+        try:
+            yield from ft  # now we cannot enforce timeout on task (
+        except Exception:
+            log.exception("Error during execution of {}".format(odt.name))
+        log.debug("Task: {} finished in: {}".format(odt.name,  time.time() - start_time))
+
+
+
+    @coroutine
+    def subscribe_on_demand_tasks(self):
+        # todo: get host/port from app.config
+        self.redis_connection = yield from asyncio_redis.Connection.create()
+        # for channel, od_task in self.on_demand_tasks.items():
+        subscriber = yield from self.redis_connection.start_subscribe()
+        yield from subscriber.subscribe(list(self.on_demand_tasks.keys()))
+        while self.is_running:
+            reply = yield from subscriber.next_published()
+            log.debug('Received: `{}` on channel `{}`'
+                      .format(repr(reply.value), reply.channel))
+            odt = self.on_demand_tasks[reply.channel]
+            async(self.handle_on_demand(odt, reply.value))
+
+    # Runner daemonization below
+    @coroutine
     def waiter(self):
         futures = [async(self.run_task_periodic(pt))
                    for pt in self.periodic_tasks]
-        log.info("Spawned all periodic tasks")
+        async(self.subscribe_on_demand_tasks())
+
+        log.info("Add all tasks into the loop")
         yield from asyncio.gather(*futures)
-        log.info("Finished all periodic tasks")
+        log.info("Finished all tasks")
 
         self.finishing_future.set_result("done")
 
@@ -135,6 +202,10 @@ def fb(*args, **kwargs):
     log.info("B: {}".format(datetime.now().isoformat()))
 
 
+def echo(*args, **kwargs):
+    log.info("Echo args: {}, kwargs: {}".format(args, kwargs))
+
+
 def fc(*args, **kwargs):
 
     from app import app
@@ -149,10 +220,13 @@ if __name__ == "__main__":
     r = Runner(None)
 
     # r.add_periodic_task(fc, None, None)
-    r.add_periodic_task("A1", fa, 1)
-    r.add_periodic_task("A2", fa, 1, 50)
+    r.add_periodic_task("A1", fa, 50)
+    # r.add_periodic_task("A2", fa, 1, 50)
     # r.add_periodic_task("B", fb, 0.01)
     # r.add_periodic_task("C", fc, 5.0)
+
+    r.add_on_demand_task("echo", "echo:pubsub", echo, lambda msg: ((msg,), {}))
+
     r.start()
 
 
