@@ -85,13 +85,15 @@ class RunAsyncTasks(Command):
         api = Api()
         r = Runner(app)
 
-        def wrapped(fn, *args, **kwargs):
-            with app.app_context():
-                fn(*args, **kwargs)
+        def wrapper(fn, *args, **kwargs):
+            def wrapped():
+                with app.app_context():
+                    fn(*args, **kwargs)
+            return wrapped
 
-        r.add_periodic_task("Create github repos", partial(wrapped, create_github_repo, api), 5)
-        r.add_periodic_task("Run builds", partial(wrapped, run_builds), 10)
-        r.add_periodic_task("Create pending dockerhub", partial(wrapped, create_pending_dockerhub, api), 20)
+        r.add_periodic_task("Create github repos", wrapper(create_github_repo, api), 5)
+        r.add_periodic_task("Run builds", wrapper(run_builds), 10)
+        r.add_periodic_task("Create pending dockerhub", wrapper(create_pending_dockerhub, api), 20, 60)
 
         r.start()
         # create_github_repo(api)

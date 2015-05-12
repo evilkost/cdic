@@ -63,8 +63,8 @@ class RBP(object):
         self.browser = RoboBrowser(
             history=True, timeout=self.timeout,
             tries=self.retries + 1,  # rb bug
-            allow_redirects=False
-            # allow_redirects=True
+            # allow_redirects=False
+            allow_redirects=True
         )
         log.info("Got new RB instance")
 

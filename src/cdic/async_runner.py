@@ -19,17 +19,23 @@ log = logging.getLogger(__name__)
 
 class PeriodicTask(object):
     """
-    :param int period: minimal delay between two consecutive function invocation [seconds]
-    :param int cooldown: delay to start next invocation after previous one finished [seconds]
+    :param name: task name
+    :param fn: callable function
+    :param period: minimal delay between two consecutive function invocation [seconds]
+    :param cool_down: delay to start next invocation after previous one finished [seconds]
     """
-    def __init__(self, name, fn, period=0, cool_down=0):
+    def __init__(self, name: str, fn: "callable", period: int=None, cool_down: int=None):
         self.name = name
         self.fn = fn
-        self.period = period
-        self.cool_down = cool_down
+        self.period = period or 0
+        self.cool_down = cool_down or 0
 
-    def can_start(self):
-        raise NotImplementedError()
+    def get_delay(self, prev_started: int, prev_finished: int) -> int:
+        cur_time = time.time()
+        since_start = cur_time - prev_started
+        since_finish = cur_time - prev_finished
+        delay = max(0, self.period - since_start, self.cool_down - since_finish)
+        return delay
 
 
 class Runner(object):
@@ -38,25 +44,16 @@ class Runner(object):
         self.loop = asyncio.get_event_loop()
 
         self.periodic_tasks = []
-        # {name->latest start time (unixtime) }
-        self.periodic_tasks_last_started = defaultdict(int)
 
-        self.pool = ThreadPoolExecutor(2)
+        self.pool = ThreadPoolExecutor(6)
         # if we use dedicated processes we should setup centralized logging
         # self.pool = ProcessPoolExecutor(4)
-
-        self.tick = 0
 
         self.is_running = False
         self.finishing_future = Future()
 
-    def ticks(self):
-        print("Current tick: {}".format(self.tick))
-        self.tick += 1
-
-    def add_periodic_task(self, name, task_fn, period):
-        self.periodic_tasks.append((name, task_fn, period))
-
+    def add_periodic_task(self, name, task_fn, period, cool_down=None):
+        self.periodic_tasks.append(PeriodicTask(name, task_fn, period, cool_down))
 
     # @coroutine
     # def schedule_periodic_task(self, name, fn, period):
@@ -72,28 +69,32 @@ class Runner(object):
     #     yield from ft
 
     @coroutine
-    def run_task_periodic(self, name, fn, period):
-        log.info("Started periodic task: {}".format(name))
-        while self.is_running:
-            ft = self.loop.run_in_executor(self.pool, fn)
+    def run_task_periodic(self, pt: PeriodicTask):
+        log.info("Started periodic task: {}".format(pt.name))
+
+        # while self.is_running:
+        if self.is_running:
+            ft = self.loop.run_in_executor(self.pool, pt.fn)
             start_time = time.time()
-            log.debug("Executing task: {}".format(name))
+            log.debug("Executing task: {}".format(pt.name))
             try:
                 yield from ft  # now we cannot enforce timeout on task (
             except Exception:
-                log.exception("Error during execution of {}".format(name))
-            elapsed = time.time() - start_time
-            log.debug("Task: {} finished in: {}".format(name, elapsed))
-            delay = max(0, period - elapsed)
-            if delay > 0 and self.is_running:
-                yield from asyncio.sleep(delay)
+                log.exception("Error during execution of {}".format(pt.name))
+            log.debug("Task: {} finished in: {}".format(pt.name,  time.time() - start_time))
+
+            # next schedule next run
+            if self.is_running:
+                self.loop.call_later(pt.get_delay(start_time, time.time()),
+                                     lambda: async(self.run_task_periodic(pt)))
+                # delay = pt.get_delay(start_time, time.time())
+                # if delay > 0 and self.is_running:
+                #     yield from asyncio.sleep(delay)
 
     @coroutine
     def waiter(self):
-        futures = [
-            async(self.run_task_periodic(name, fn, period))
-            for name, fn, period in self.periodic_tasks
-        ]
+        futures = [async(self.run_task_periodic(pt))
+                   for pt in self.periodic_tasks]
         log.info("Spawned all periodic tasks")
         yield from asyncio.gather(*futures)
         log.info("Finished all periodic tasks")
@@ -108,10 +109,8 @@ class Runner(object):
 
     def start(self):
         self.attach_signal_handlers()
-
         self.is_running = True
         async(self.waiter())
-        # self.loop.run_until_complete(self.waiter())
         self.loop.run_forever()
 
     @coroutine
@@ -124,7 +123,7 @@ class Runner(object):
 
 
 def fa(*args, **kwargs):
-    from datetime import datetime#
+    from datetime import datetime
     log.info("A: {}".format(datetime.now().isoformat()))
 
 
@@ -150,8 +149,9 @@ if __name__ == "__main__":
     r = Runner(None)
 
     # r.add_periodic_task(fc, None, None)
-    r.add_periodic_task("A", fa, 0.02)
-    r.add_periodic_task("B", fb, 0.01)
+    r.add_periodic_task("A1", fa, 1)
+    r.add_periodic_task("A2", fa, 1, 50)
+    # r.add_periodic_task("B", fb, 0.01)
     # r.add_periodic_task("C", fc, 5.0)
     r.start()
 
