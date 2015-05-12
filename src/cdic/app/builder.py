@@ -78,7 +78,7 @@ def build_one(project: Project):
         db.session.commit()
 
 
-def run_builds():
+def run_builds(*args, **kwargs):
     # for prj in get_running_projects():
     for prj in get_project_waiting_for_push():
         try:

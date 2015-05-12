@@ -30,7 +30,7 @@ class GhClient(object):
         # TODO: check response code
 
 
-def create_github_repo(api):
+def create_github_repo(api, *args, **kwargs):
     client = GhClient(api.get_config())
     created_list = []
 

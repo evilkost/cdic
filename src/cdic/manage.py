@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # coding: utf-8
+from functools import partial
 
 import os
 import logging
@@ -13,17 +14,13 @@ from app.internal_api import Api
 
 from app.util.dockerhub import create_pending_dockerhub
 from app.util.github import create_github_repo
+from async_runner import Runner
+
+from cdic.util import setup_logging
 
 manager = Manager(app)
 
-
-def setup_logging(log_file_path):
-    logging.basicConfig(
-        filename=log_file_path,
-        # stream=sys.stdout,
-        format='[%(asctime)s][%(name)s][%(levelname)6s]: %(message)s',
-        level=logging.DEBUG
-    )
+log = logging.getLogger(__name__)
 
 
 class CreateSqliteFileCommand(Command):
@@ -80,15 +77,26 @@ class DropDBCommand(Command):
 
 class RunAsyncTasks(Command):
     """
-    Run cdic task  like docker hub repo creation
+    Run cdic tasks like docker hub repo creation
     """
     def run(self):
         setup_logging("/tmp/cdic_async_tasks.log")
 
         api = Api()
-        create_github_repo(api)
-        run_builds()
-        create_pending_dockerhub(api)
+        r = Runner(app)
+
+        def wrapped(fn, *args, **kwargs):
+            with app.app_context():
+                fn(*args, **kwargs)
+
+        r.add_periodic_task("Create github repos", partial(wrapped, create_github_repo, api), 5)
+        r.add_periodic_task("Run builds", partial(wrapped, run_builds), 10)
+        r.add_periodic_task("Create pending dockerhub", partial(wrapped, create_pending_dockerhub, api), 20)
+
+        r.start()
+        # create_github_repo(api)
+        #run_builds()
+        #create_pending_dockerhub(api)
 
 
 manager.add_command("create_sqlite_file", CreateSqliteFileCommand())

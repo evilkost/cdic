@@ -6,7 +6,6 @@ from flask import Flask, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
 
-sys.path.append("..")
 from .util.git import GitStore
 
 app = Flask(__name__)
