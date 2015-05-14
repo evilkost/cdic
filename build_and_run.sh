@@ -17,11 +17,11 @@ fi
 
 echo "RUN AS ROOT"
 
-cp $PRIVATE_CONF_PATH _docker/cdic.py
-cp $PRIVATE_GITHUB_KEY _docker/id_rsa
+mkdir _docker/private
+cp $PRIVATE_CONF_PATH _docker/private/cdic.py
+cp $PRIVATE_GITHUB_KEY _docker/private/id_rsa
 
 docker build -t cdic .
 docker run -d --name="cdic" -p 8000:8000 -it -v /sys/fs/cgroup:/sys/fs/cgroup:ro cdic:latest
 
-rm -f _docker/cdic.py
-rm -f _docker/id_rsa
+rm -rf _docker/private

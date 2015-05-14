@@ -91,8 +91,7 @@ class RunAsyncTasks(Command):
         r = Runner(app)
 
         r.add_periodic_task("Reschedule build task", ctx_wrapper(reschedule_stall_builds), 200)
-
-        r.add_periodic_task("Create pending dockerhub", ctx_wrapper(create_pending_dockerhub), 120, 60)
+        r.add_periodic_task("Create pending dockerhub", ctx_wrapper(create_pending_dockerhub), 60, 60)
         # TODO: add periodic task to check status of dockerhub build
 
         all_async_tasks = [
@@ -103,9 +102,6 @@ class RunAsyncTasks(Command):
             r.add_on_demand_task(task)
 
         r.start()
-        # create_github_repo(api)
-        # run_builds()
-        # create_pending_dockerhub(api)
 
 
 manager.add_command("create_sqlite_file", CreateSqliteFileCommand())

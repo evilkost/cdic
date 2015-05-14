@@ -111,16 +111,16 @@ class RBP(object):
             # allow_redirects=True
             user_agent="Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:37.0) Gecko/20100101 Firefox/37.0"
         )
-        log.info("Got new RB instance")
+        log.debug("Got new RB instance")
 
     def open_url(self, url):
-        log.info("< trying to open: {}".format(url))
+        log.debug("< trying to open: {}".format(url))
         self.insert_referer()
         self.browser.open(url)
         log.debug("< REQUEST HEADERS: \n{}".format(
             "\n".join(" {}\t{}".format(k, v) for k, v in self.browser.response.request.headers.items())
         ))
-        log.info("> {}".format(self.browser.response.status_code))
+        log.debug("> {}".format(self.browser.response.status_code))
         log.debug("> RESPONSE HEADERS: \n{}".format(
             "\n".join(" {}\t{}".format(k, v) for k, v in self.browser.response.headers.items())
         ))
@@ -144,7 +144,7 @@ class RBP(object):
 
             time.sleep(random.random() + 0.3)
             redir_to = self.browser.response.headers["Location"]
-            log.info("Following redirect: {}".format(redir_to))
+            log.debug("Following redirect: {}".format(redir_to))
             # if "https://registry.hub.docker.com/u/" in redir_to:
             #     log.debug("")
 
@@ -178,9 +178,9 @@ class RBP(object):
             form[field_name].value = value
 
         self.insert_referer()
-        log.info("< submitting  form: {}".format(form))
+        log.debug("< submitting  form: {}".format(form))
         self.browser.submit_form(form)
-        log.info("> {}".format(self.browser.response.status_code))
+        log.debug("> {}".format(self.browser.response.status_code))
         self.follow_redirect()
 
 
@@ -274,7 +274,7 @@ class Creator(object):
             else:
                 self.do_next_stage()
         else:
-            log.error("Failed to create")
+            log.error("Failed to create dockerhub repos")
 
         return self.create_done_list
 
