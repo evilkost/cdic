@@ -32,7 +32,6 @@ class Runner(object):
         self.redis_connection = None
 
         self.is_running = False
-        # self.finishing_future = Future()
 
     def add_periodic_task(self, name, task_fn, period, cool_down=None):
         self.periodic_tasks.append(PeriodicTask(name, task_fn, period, cool_down))
@@ -96,9 +95,10 @@ class Runner(object):
     def stop(self):
         log.info("Stopping async runner ...")
         self.is_running = False
-        # yield from self.finishing_future
+
         self.pool.shutdown(wait=True)
         self.loop.stop()
+
         log.info("Finished ")
 
     def attach_signal_handlers(self):

@@ -12,7 +12,7 @@ from dateutil.parser import parse as dt_parse
 
 
 from robobrowser import RoboBrowser
-import mechanicalsoup
+# import mechanicalsoup
 
 
 from .. import app

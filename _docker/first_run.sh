@@ -1,5 +1,6 @@
 #!/usr/bin/bash
 
+
 echo "befor"
 if [ -e /opt/cdic/_docker/init_done ]; then
     echo "already initialised"
@@ -7,7 +8,7 @@ if [ -e /opt/cdic/_docker/init_done ]; then
 else
     echo "initiating db"
     cd /opt/cdic/src
-    python3 cdic/manage.py create_db -f alembic.ini
+    PYTHONPATH=.:$PYTHONPATH /usr/bin/python3 cdic/manage.py create_db -f alembic.ini
     # alembic upgrade head
 
     touch /opt/cdic/_docker/init_done
