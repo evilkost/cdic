@@ -1,9 +1,10 @@
 # coding: utf-8
 
 import json
+import logging
+
 from requests import request
 
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -30,18 +31,26 @@ class GhClient(object):
         # TODO: check response code
 
 
-def create_github_repo(api, *args, **kwargs):
-    client = GhClient(api.get_config())
-    created_list = []
 
+
+
+# def create_github_repo(api, *args, **kwargs):
+#     client = GhClient(api.get_config())
+#     created_list = []
+#
+#     for project in api.get_pending_github_create_repo_list():
+#         repo_name = project.repo_name
+#         try:
+#             log.info("Creating repo: {}".format(repo_name))
+#             client.create_repo(repo_name)
+#             created_list.append(repo_name)
+#             api.set_github_repo_created(project.id)
+#         except Exception as err:
+#             log.exception(err)
+#     else:
+#         log.debug("No projects to create github repo")
+
+
+def reschedule_unfinished_jobs(api, *args, **kwargs):
     for project in api.get_pending_github_create_repo_list():
         repo_name = project.repo_name
-        try:
-            log.info("Creating repo: {}".format(repo_name))
-            client.create_repo(repo_name)
-            created_list.append(repo_name)
-            api.set_github_repo_created(project.id)
-        except Exception as err:
-            log.exception(err)
-    else:
-        log.debug("No projects to create github repo")

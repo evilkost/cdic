@@ -31,3 +31,6 @@ GITHUB_URL = "https://github.com"
 GITHUB_PUSH_URL = "git://github.com"
 
 COPR_BASE_URL = "https://copr.fedoraproject.org"
+
+MAIN_LOG = "/var/log/cdic/main.log"
+ASYNC_LOG = "/var/log/cdic/async.log"

@@ -8,7 +8,6 @@ from .util.git import GitStore
 
 from . import app, db
 from .constants import SourceType
-from .logic.project_logic import get_running_projects, get_project_waiting_for_push
 from .logic.event_logic import create_project_event
 from .models import Project
 
@@ -55,36 +54,48 @@ def init_local_repo(project: Project):
                                   "not implemented".format(project.source_mode))
 
 
-def build_one(project: Project):
-    if not project.github_repo_exists:
-        log.info("github repo doesn't exists for: {}".format(project.repo_name))
-        # waiting for github repo creation
-        return
-    else:
-        if not project.local_repo_exists:
-            log.info("local repo doesn't exists for: {}".format(project.repo_name))
-            init_local_repo(project)
+# def build_one(project: Project):
+#     if not project.github_repo_exists:
+#         log.info("github repo doesn't exists for: {}".format(project.repo_name))
+#         # waiting for github repo creation
+#         return
+#     else:
+#         if not project.local_repo_exists:
+#             log.info("local repo doesn't exists for: {}".format(project.repo_name))
+#             init_local_repo(project)
+#
+#         log.info("committing changes and pushing them for: {}".format(project.repo_name))
+#         update_local_repo_and_push(project)
+#
+#         if project.dockerhub_repo_exists:
+#             # mark build as started
+#             project.build_is_running = False
+#             pe = create_project_event(
+#                 project, "Build request passed to Dockerhub, wait for result")
+#             db.session.add_all([project, pe])
+#
+#         db.session.commit()
 
-        log.info("committing changes and pushing them for: {}".format(project.repo_name))
-        update_local_repo_and_push(project)
 
-        if project.dockerhub_repo_exists:
-            # mark build as started
-            project.build_is_running = False
-            pe = create_project_event(
-                project, "Build request passed to Dockerhub, wait for result")
-            db.session.add_all([project, pe])
+def push_build(project: Project):
+    if not project.local_repo_exists:
+        log.info("Local repo doesn't exists for: {}".format(project.repo_name))
+        init_local_repo(project)
 
-        db.session.commit()
+    log.info("Committing changes and pushing them for: {}".format(project.repo_name))
+    update_local_repo_and_push(project)
+    db.session.commit()
 
 
-def run_builds(*args, **kwargs):
-    # for prj in get_running_projects():
-    for prj in get_project_waiting_for_push():
-        try:
-            log.info("Trying to push project: {} to github".format(prj.repo_name))
-            build_one(prj)
-        except Exception as err:
-            log.exception("Error during build of prj: {}".format(prj))
-    else:
-        log.debug("No projects to push to github")
+# def run_builds(*args, **kwargs):
+#     # for prj in get_running_projects():
+#     for prj in get_project_waiting_for_push():
+#         try:
+#             log.info("Trying to push project: {} to github".format(prj.repo_name))
+#             build_one(prj)
+#         except Exception as err:
+#             log.exception("Error during build of prj: {}".format(prj))
+#     else:
+#         log.debug("No projects to push to github")
+
+

@@ -6,11 +6,10 @@ import os
 from flask import abort
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.query import Query
-from sqlalchemy.sql import true, and_, or_
+from sqlalchemy.sql import true, or_
 
 from .. import app
 from ..constants import SourceType
-
 from ..exceptions import PatchDockerfileException, FailedToFindProjectByDockerhubName
 from ..models import Project, User
 from ..forms.project import ProjectForm
@@ -169,3 +168,6 @@ def update_patched_dockerfile(project: Project):
     project.patched_dockerfile = patched
     project.local_repo_changed_on = datetime.datetime.utcnow()
     return project
+
+
+

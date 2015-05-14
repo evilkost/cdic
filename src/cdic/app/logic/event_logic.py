@@ -1,4 +1,5 @@
 # coding: utf-8
+import datetime
 
 from ..models import Project, ProjectEvent
 from ..constants import EventType
@@ -19,6 +20,7 @@ def get_recent_events_by_type(project: Project, event_type: EventType,
 def create_project_event(project: Project, text,
                          data_json=None, event_type=None) -> ProjectEvent:
     event = ProjectEvent(project=project, human_text=text)
+    event.created_on = datetime.datetime.utcnow()
 
     if data_json:
         event.optional_data_json = data_json

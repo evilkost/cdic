@@ -7,16 +7,18 @@ import logging
 
 import flask
 from flask_script import Manager, Command, Option, Group
-
-from app import app, db
-from app.builder import run_builds
-from app.internal_api import Api
-
-from app.util.dockerhub import create_pending_dockerhub
-from app.util.github import create_github_repo
-from async_runner import Runner
+from app.logic.build_logic import run_build_task
 
 from cdic.util import setup_logging
+
+from app import app, db
+from app.logic.build_logic import reschedule_stall_builds
+
+from app.util.dockerhub import create_pending_dockerhub
+
+from app.async.runner import Runner
+from app.async.pusher import ctx_wrapper
+
 
 manager = Manager(app)
 
@@ -80,25 +82,30 @@ class RunAsyncTasks(Command):
     Run cdic tasks like docker hub repo creation
     """
     def run(self):
-        setup_logging("/tmp/cdic_async_tasks.log")
+        setup_logging(app.config["ASYNC_LOG"])
 
-        api = Api()
+        logging.getLogger("app.util.dockerhub").setLevel(logging.WARN)
+        logging.getLogger("app.async.runner").setLevel(logging.INFO)
+        logging.getLogger("app.logic.build_logic").setLevel(logging.INFO)
+
         r = Runner(app)
 
-        def wrapper(fn, *args, **kwargs):
-            def wrapped():
-                with app.app_context():
-                    fn(*args, **kwargs)
-            return wrapped
+        r.add_periodic_task("Reschedule build task", ctx_wrapper(reschedule_stall_builds), 200)
 
-        r.add_periodic_task("Create github repos", wrapper(create_github_repo, api), 5)
-        r.add_periodic_task("Run builds", wrapper(run_builds), 10)
-        r.add_periodic_task("Create pending dockerhub", wrapper(create_pending_dockerhub, api), 20, 60)
+        r.add_periodic_task("Create pending dockerhub", ctx_wrapper(create_pending_dockerhub), 120, 60)
+        # TODO: add periodic task to check status of dockerhub build
+
+        all_async_tasks = [
+            run_build_task,
+        ]
+
+        for task in all_async_tasks:
+            r.add_on_demand_task(task)
 
         r.start()
         # create_github_repo(api)
-        #run_builds()
-        #create_pending_dockerhub(api)
+        # run_builds()
+        # create_pending_dockerhub(api)
 
 
 manager.add_command("create_sqlite_file", CreateSqliteFileCommand())

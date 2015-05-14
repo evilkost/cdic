@@ -36,8 +36,7 @@
           <b>Configuration</b>
         </div>
         <div class="panel-body">
-          <dl>
-              <!--class="dl-horizontal"-->
+          <dl class="dl-horizontal">
 
             <dt>Linked coprs</dt>
             {% for copr in project.linked_coprs %}
@@ -50,8 +49,8 @@
             <dd>(no linked coprs)</dd>
             {% endfor %}
 
-            <dt>Source type</dt>
-            <dd>{{ project.source_mode }}</dd>
+            <!--<dt>Source type</dt>-->
+            <!--<dd>{{ project.source_mode }}</dd>-->
 
             {% if project.source_mode == "git_url"  and project.git_url %}
             <dt>Git</dt>
@@ -91,6 +90,13 @@
               <span class="label label-info"> {{ project.dockerhub_build_status}} </span>
               &nbsp;updated: {{ project.dockerhub_build_status_updated_on }}
             </dd>
+            {% endif %}
+
+            <dt>Build is running</dt>
+            <dd> {{ project.build_is_running }}</dd>
+
+            {% if project.build_is_running %}
+
             {% endif %}
 
             <hr />

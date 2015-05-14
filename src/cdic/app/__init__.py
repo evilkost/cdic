@@ -2,9 +2,11 @@
 
 import os
 import sys
+import logging
 from flask import Flask, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
+
 
 from .util.git import GitStore
 
@@ -13,6 +15,8 @@ app = Flask(__name__)
 # oid = OpenID(app, app.config["OPENID_STORE"], safe_roots=[])
 app.config.from_pyfile("../config.py")
 app.config.from_pyfile(os.path.expanduser("~/.config/cdic.py"))
+
+log = logging.getLogger(__name__)
 
 Bootstrap(app)
 
@@ -45,3 +49,10 @@ def help_urls():
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template('page_not_found.html', error=error), 404
+
+if __name__ == "__main__":
+    logging.basicConfig(
+        filename=app.config["MAIN_LOG"],
+        format='[%(asctime)s][%(threadName)10s][%(levelname)6s][%(name)s]: %(message)s',
+        level=logging.DEBUG
+    )

@@ -2,7 +2,7 @@
 import logging
 
 
-def setup_logging(log_file_path):
+def setup_logging(log_file_path=None):
     logging.basicConfig(
         filename=log_file_path,
         # stream=sys.stdout,
