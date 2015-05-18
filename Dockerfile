@@ -4,7 +4,12 @@ FROM vpavlin/fedora:systemd
 
 
 RUN yum install -y dnf && \
-    dnf install -y python3 python3-pip python3-gunicorn git redis vim tmux
+    dnf install -y python3 python3-pip python3-gunicorn git redis vim tmux wget npm dnf-plugins-core
+
+RUN dnf copr enable msuchy/copr -y && \
+    dnf install -y phantomjs && \
+    mkdir -p /opt/casper && cd /opt/casper && git clone git://github.com/n1k0/casperjs.git && \
+    cd casperjs && ln -sf `pwd`/bin/casperjs /usr/bin/casperjs && chmod +x /usr/bin/casperjs
 
 RUN mkdir -p /opt/cdic && cd /opt/ && git clone https://github.com/evilkost/cdic.git && \
     cd /opt/cdic && pip3 install -r requirements.txt

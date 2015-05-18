@@ -14,7 +14,8 @@ DATABASE_CONNECT_OPTIONS = {}
 CSRF_ENABLED = True
 CSRF_SESSION_KEY = "somethingimpossibletoguess"
 
-OPENID_STORE = "/tmp/cdic/openid/"
+VAR_ROOT = "/tmp/cdic"
+OPENID_STORE = "/tmp/cdic/openid"
 CDIC_WORKPLACE = "/tmp/cdic/wp"
 
 DOCKERHUB_URL = 'https://hub.docker.com'
@@ -27,10 +28,11 @@ GITHUB_TOKEN = "FILL GITHUB TOKEN"
 GITHUB_USER = "FILL GITHUB USER"
 GITHUB_API_ROOT = "https://api.github.com"
 GITHUB_URL = "https://github.com"
-# git@github.com:cdic-test/cdic_vgologuz__Foobar.git
+
 GITHUB_PUSH_URL = "git://github.com"
 
 COPR_BASE_URL = "https://copr.fedoraproject.org"
 
 MAIN_LOG = "/var/log/cdic/main.log"
 ASYNC_LOG = "/var/log/cdic/async.log"
+

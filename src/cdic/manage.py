@@ -84,7 +84,7 @@ class RunAsyncTasks(Command):
     def run(self):
         setup_logging(app.config["ASYNC_LOG"])
 
-        logging.getLogger("app.util.dockerhub").setLevel(logging.WARN)
+        logging.getLogger("app.util.dockerhub").setLevel(logging.INFO)
         logging.getLogger("app.async.runner").setLevel(logging.INFO)
         logging.getLogger("app.logic.build_logic").setLevel(logging.INFO)
 

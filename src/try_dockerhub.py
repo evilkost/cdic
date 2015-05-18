@@ -10,11 +10,11 @@ log = logging.getLogger(__name__)
 
 from cdic.app import app
 from cdic.util import setup_logging
-from cdic.app.util.dockerhub import Creator
+from cdic.app.util.dockerhub import create_dockerhub
 
 logging.basicConfig(
-    filename="/tmp/try_dockerhub.log",
-    # stream=sys.stdout,
+    # filename="/tmp/try_dockerhub.log",
+    stream=sys.stdout,
     # format='[%(asctime)s][%(name)s][PID: %(process)d][%(levelname)6s]: %(message)s',
     format='[%(asctime)s][%(levelname)6s][%(name)s]: %(message)s',
     level=logging.DEBUG
@@ -23,9 +23,10 @@ logging.basicConfig(
 
 
 def main(lst):
-    cr = Creator(app.config, lst)
-    return cr
+    #cr = Creator(app.config, lst)
+    #return cr
+    create_dockerhub(lst[0])
 
 
 if __name__ == "__main__":
-    main(['t1', 't2', 't3'])
+    main(['cdic-vgologuz-pymongo', 'cdic-vgologuz-uvao', 't2', 't3'])

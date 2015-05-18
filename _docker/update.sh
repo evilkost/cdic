@@ -2,9 +2,9 @@
 
 
 cd /opt/cdic/
-# git pull --force
+git pull --force
 
-/opt/cdic/_docker/first_run.sh
+#/opt/cdic/_docker/first_run.sh
 
 pip3 install -r requirements.txt
 cd src
