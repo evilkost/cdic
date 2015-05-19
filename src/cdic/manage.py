@@ -7,15 +7,14 @@ import logging
 
 import flask
 from flask_script import Manager, Command, Option, Group
-from app.logic.build_logic import run_build_task
+
 
 from cdic.util import setup_logging
 
+from app.logic.build_logic import run_build_task
+from app.logic.dockerhub_logic import create_dockerhub_task
 from app import app, db
 from app.logic.build_logic import reschedule_stall_builds
-
-from app.util.dockerhub import create_pending_dockerhub
-
 from app.async.runner import Runner
 from app.async.pusher import ctx_wrapper
 
@@ -91,11 +90,12 @@ class RunAsyncTasks(Command):
         r = Runner(app)
 
         r.add_periodic_task("Reschedule build task", ctx_wrapper(reschedule_stall_builds), 200)
-        r.add_periodic_task("Create pending dockerhub", ctx_wrapper(create_pending_dockerhub), 60, 60)
+        # r.add_periodic_task("Create pending dockerhub", ctx_wrapper(create_pending_dockerhub), 60, 60)
         # TODO: add periodic task to check status of dockerhub build
 
         all_async_tasks = [
             run_build_task,
+            create_dockerhub_task,
         ]
 
         for task in all_async_tasks:

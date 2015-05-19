@@ -3,10 +3,12 @@
 from sqlalchemy.sql import true, false
 
 from .. import db
+from ..util.dockerhub import create_dockerhub_automated_build_repo
 from ..models import Project
-
-from .project_logic import get_project_by_id
-from .event_logic import create_project_event
+from ..logic.event_logic import create_project_event
+from ..logic.project_logic import get_project_by_id
+from ..async.task import OnDemandTask
+from ..async.pusher import PREFIX, ctx_wrapper
 
 
 def get_pending_docker_create_repo_list() -> "Iterable[Project]":
@@ -17,17 +19,28 @@ def get_pending_docker_create_repo_list() -> "Iterable[Project]":
     )
 
 
-def set_docker_repo_created(ident: int):
-    prj = get_project_by_id(ident)
-    prj.dockerhub_repo_exists = True
+def set_docker_repo_created(project: Project):
+    project.dockerhub_repo_exists = True
 
-    pe = create_project_event(prj, "Created dockerhub automated build")
-
-    if prj.build_is_running:
+    pe = create_project_event(project, "Created dockerhub automated build")
+    if project.build_is_running:
         # first ever build,
-        pe2 = create_project_event(prj, "Build request passed to Dockerhub, wait for result")
+        pe2 = create_project_event(project, "Build request passed to Dockerhub, wait for result")
         db.session.add(pe2)
-        prj.build_is_running = False
+        project.build_is_running = False
 
-    db.session.add_all([prj, pe])
+    db.session.add_all([project, pe])
+
+
+def create_dockerhub_repo(project_id):
+    project = get_project_by_id(project_id)
+    create_dockerhub_automated_build_repo(project.repo_name)
+    set_docker_repo_created(project)
     db.session.commit()
+
+
+create_dockerhub_task = OnDemandTask(
+    "crate dockerhub automated build",
+    "{}_create_dockerhub".format(PREFIX),
+    fn=ctx_wrapper(create_dockerhub_repo)
+)

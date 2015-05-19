@@ -13,6 +13,7 @@ var data = JSON.parse(fs.read(credentials));
 
 var username = data.username;
 var password = data.password;
+var github_username = data.github_username;
 
 
 casper.start('https://hub.docker.com/account/login/', function() {
@@ -27,7 +28,7 @@ casper.thenOpen('https://registry.hub.docker.com/builds/github/select/', functio
 });
 
 
-casper.thenOpen('https://registry.hub.docker.com/builds/github/' + username + '/' + repo_name, function() {
+casper.thenOpen('https://registry.hub.docker.com/builds/github/' + github_username + '/' + repo_name, function() {
     this.echo(this.getCurrentUrl());
     this.fill('form#mainform', {}, true);
 });

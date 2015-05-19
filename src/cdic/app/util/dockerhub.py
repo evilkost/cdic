@@ -1,31 +1,23 @@
 # coding: utf-8
 import json
 import random
-
 import os
-import sys
 import time
-
-import tempfile
 import subprocess
 import pipes
-from functools import partial
 import logging
-
 from urllib.parse import urljoin
+
 from dateutil.parser import parse as dt_parse
-
-
 import requests
 from robobrowser import RoboBrowser
+
 # import mechanicalsoup
+import robobrowser
 
 
 from .. import app
-import robobrowser
 from ..exceptions import DockerHubCreateRepoError
-from ..logic.dockerhub_logic import get_pending_docker_create_repo_list, \
-    set_docker_repo_created
 
 log = logging.getLogger(__name__)
 
@@ -202,88 +194,88 @@ class RBP(object):
 #         return klass(*args, **kwargs)
 
 
-class Creator(object):
-
-    def __init__(self, app_config, build_name_list):
-        self.timeout = 10
-        self.tries = 1
-
-        self.br = RBP(timeout=self.timeout, retries=self.tries)
-
-        self.username = app_config["DOCKERHUB_USERNAME"]
-        self.password = app_config["DOCKERHUB_PASSWORD"]
-        self.dh_url = app_config["DOCKERHUB_URL"]
-        self.dr_url = app_config["DOCKERREGISTRY_URL"]
-        self.login_url = "{}/account/login/".format(self.dh_url)
-        self.github_repo_name = app_config["GITHUB_USER"]
-
-        self.ac_creation_url_tpl = "{dr_url}/builds/github/{github_repo_name}/{build_name}/"
-
-        self.build_name_list = build_name_list
-        self.stage_num = 0
-        self.tries_done = 0
-        self.stages = [
-            self.do_login,
-            self.go_to_build_add,
-            partial(self.br.open_url, "{}/builds/github/select/".format(self.dr_url)),
-        ]
-        self.stages.extend([
-            partial(self.submit_create, bn) for bn in self.build_name_list
-        ])
-
-        self.create_done_list = []
-
-    def go_to_build_add(self):
-        try:
-            self.br.referer_enabled = False
-            self.br.browser.session.headers.pop("Referer")
-            # self.br.open_url("{}/u/".format(self.dr_url))
-            time.sleep(10)  # some magic with dockerhub oauth processing
-            self.br.open_url("{}/builds/add/".format(self.dr_url))
-        finally:
-            self.br.referer_enabled = True
-
-    def do_login(self):
-        self.br.reset_browser()
-        self.br.find_and_fill_form(self.login_url, form_id="form-login",
-                                   form_fields={"username": self.username, "password": self.password})
-
-    def submit_create(self, build_name):
-        if build_name in self.create_done_list:
-            # skip on re-run
-            return
-
-        url = self.ac_creation_url_tpl.format(
-            dr_url=self.dr_url,
-            github_repo_name=self.github_repo_name,
-            build_name=build_name)
-        self.br.find_and_fill_form(url, form_id="mainform", form_fields={})
-        if self.br.get_status() == 200:
-            self.create_done_list.append(build_name)
-        # TODO: add webhook here ???
-
-    def do_next_stage(self):
-        stage = self.stages[self.stage_num]
-        log.debug("Doing stage: #{}, attempt: #{}".format(self.stage_num, self.tries_done))
-        time.sleep(1)
-        try:
-            stage()
-            self.stage_num += 1
-        except Exception as err:
-            log.exception(err)
-            self.stage_num = 0
-            self.tries_done += 1
-
-    def run(self):
-        while self.tries_done < self.tries:
-            if self.stage_num == len(self.stages):
-                break
-            else:
-                self.do_next_stage()
-        else:
-            log.error("Failed to create dockerhub repos")
-
-        return self.create_done_list
+# class Creator(object):
+#
+#     def __init__(self, app_config, build_name_list):
+#         self.timeout = 10
+#         self.tries = 1
+#
+#         self.br = RBP(timeout=self.timeout, retries=self.tries)
+#
+#         self.username = app_config["DOCKERHUB_USERNAME"]
+#         self.password = app_config["DOCKERHUB_PASSWORD"]
+#         self.dh_url = app_config["DOCKERHUB_URL"]
+#         self.dr_url = app_config["DOCKERREGISTRY_URL"]
+#         self.login_url = "{}/account/login/".format(self.dh_url)
+#         self.github_repo_name = app_config["GITHUB_USER"]
+#
+#         self.ac_creation_url_tpl = "{dr_url}/builds/github/{github_repo_name}/{build_name}/"
+#
+#         self.build_name_list = build_name_list
+#         self.stage_num = 0
+#         self.tries_done = 0
+#         self.stages = [
+#             self.do_login,
+#             self.go_to_build_add,
+#             partial(self.br.open_url, "{}/builds/github/select/".format(self.dr_url)),
+#         ]
+#         self.stages.extend([
+#             partial(self.submit_create, bn) for bn in self.build_name_list
+#         ])
+#
+#         self.create_done_list = []
+#
+#     def go_to_build_add(self):
+#         try:
+#             self.br.referer_enabled = False
+#             self.br.browser.session.headers.pop("Referer")
+#             # self.br.open_url("{}/u/".format(self.dr_url))
+#             time.sleep(10)  # some magic with dockerhub oauth processing
+#             self.br.open_url("{}/builds/add/".format(self.dr_url))
+#         finally:
+#             self.br.referer_enabled = True
+#
+#     def do_login(self):
+#         self.br.reset_browser()
+#         self.br.find_and_fill_form(self.login_url, form_id="form-login",
+#                                    form_fields={"username": self.username, "password": self.password})
+#
+#     def submit_create(self, build_name):
+#         if build_name in self.create_done_list:
+#             # skip on re-run
+#             return
+#
+#         url = self.ac_creation_url_tpl.format(
+#             dr_url=self.dr_url,
+#             github_repo_name=self.github_repo_name,
+#             build_name=build_name)
+#         self.br.find_and_fill_form(url, form_id="mainform", form_fields={})
+#         if self.br.get_status() == 200:
+#             self.create_done_list.append(build_name)
+#         # TODO: add webhook here ???
+#
+#     def do_next_stage(self):
+#         stage = self.stages[self.stage_num]
+#         log.debug("Doing stage: #{}, attempt: #{}".format(self.stage_num, self.tries_done))
+#         time.sleep(1)
+#         try:
+#             stage()
+#             self.stage_num += 1
+#         except Exception as err:
+#             log.exception(err)
+#             self.stage_num = 0
+#             self.tries_done += 1
+#
+#     def run(self):
+#         while self.tries_done < self.tries:
+#             if self.stage_num == len(self.stages):
+#                 break
+#             else:
+#                 self.do_next_stage()
+#         else:
+#             log.error("Failed to create dockerhub repos")
+#
+#         return self.create_done_list
 
 
 def get_builds_history(config, repo_name: str):
@@ -314,21 +306,25 @@ def add_webhook():
     pass
 
 
-def create_dockerhub(repo_name):
+
+def create_dockerhub_automated_build_repo(repo_name):
     """
     Create new automated build at dockerhub using phantomjs/casperjs
     This function is rather time consuming, expect 15secons on average
+
     :param repo_name:
     :return: Nothing on success
     :raises DockerHubCreateRepoError: when failed to create automated build
     """
+    log.info("Creating new automated build: {}".format(repo_name))
     # ensure that credentials file for casperjs exists
     credentionals = os.path.join(app.config["VAR_ROOT"], "dockerhub_credentionals.json")
     if not os.path.exists(credentionals):
         with open(credentionals, "w") as handle:
             handle.write(json.dumps({
                 "username": app.config["DOCKERHUB_USERNAME"],
-                "password": app.config["DOCKERHUB_PASSWORD"]
+                "password": app.config["DOCKERHUB_PASSWORD"],
+                "github_username": app.config["GITHUB_USER"],
             }))
 
     src_dir = os.path.dirname(os.path.abspath(__file__))
@@ -362,20 +358,22 @@ def create_dockerhub(repo_name):
     if response.status_code != 200:
         raise DockerHubCreateRepoError(msg="Repo doesn't exists at `{}`".format(url))
 
+    log.info("Finished creation of new dockerhub repo: {}".format(repo_name))
 
-def create_pending_dockerhub(*args, **kwargs):
-    projects_list = get_pending_docker_create_repo_list()
-    repo_name_list = list([prj.repo_name for prj in projects_list])
-    if not repo_name_list:
-        log.debug("No projects to create docker hub repo")
-        return
 
-    log.info("create_pending_repo invoked, pending:{}"
-             .format(repo_name_list))
-
-    creator = Creator(app.config, repo_name_list)
-    created_repo_list = creator.run()
-
-    name_to_project_id = {prj.repo_name: prj.id for prj in projects_list}
-    for name in created_repo_list:
-        set_docker_repo_created(name_to_project_id[name])
+# def create_pending_dockerhub(*args, **kwargs):
+#     projects_list = get_pending_docker_create_repo_list()
+#     repo_name_list = list([prj.repo_name for prj in projects_list])
+#     if not repo_name_list:
+#         log.debug("No projects to create docker hub repo")
+#         return
+#
+#     log.info("create_pending_repo invoked, pending:{}"
+#              .format(repo_name_list))
+#
+#     creator = Creator(app.config, repo_name_list)
+#     created_repo_list = creator.run()
+#
+#     name_to_project_id = {prj.repo_name: prj.id for prj in projects_list}
+#     for name in created_repo_list:
+#         set_docker_repo_created(name_to_project_id[name])

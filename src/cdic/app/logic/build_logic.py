@@ -10,6 +10,7 @@ from ..models import Project
 from ..constants import EventType
 from ..logic.event_logic import create_project_event
 from ..logic.github_logic import set_github_repo_created
+from ..logic.dockerhub_logic import create_dockerhub_task
 from ..logic.project_logic import update_patched_dockerfile, get_project_by_id, get_running_projects
 from ..util.github import GhClient
 from ..builder import push_build
@@ -17,6 +18,7 @@ from ..async.task import OnDemandTask
 from ..async.pusher import schedule_task, PREFIX, ctx_wrapper
 
 log = logging.getLogger(__name__)
+
 
 def run_build(project_id):
     project = get_project_by_id(project_id)
@@ -36,6 +38,11 @@ def run_build(project_id):
 
     if project.dockerhub_repo_exists:
         pe = create_project_event(project, "Build request passed to Dockerhub, wait for result")
+        db.session.add(pe)
+    else:
+        schedule_task(create_dockerhub_task, project.id)
+        pe = create_project_event(project, "Dockerhub automated build repo is scheduled for creation, "
+                                           "please wait")
         db.session.add(pe)
 
     project.build_is_running = False
