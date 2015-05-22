@@ -69,7 +69,7 @@ def unlink(project_id, link_id):
         db.session.commit()
     return redirect(url_for("copr.search_and_link", project_id=project_id))
 
-@copr_bp.route("/projects/<project_id>/update_build_history", methods=["POST"])
+@copr_bp.route("/projects/<project_id>/update_build_history", methods=["GET", "POST"])
 @login_required
 def update_dh_history(project_id):
     # update_dockerhub_build_status(project_id)

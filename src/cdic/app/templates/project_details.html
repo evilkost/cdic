@@ -27,13 +27,13 @@
 
       <a class="btn btn-primary" href="{{ url_for('main.project_start_build', project_id=project.id)}}">Run build</a>
 
-      <form>
-        <button class="btn btn-default"
-                formmethod="post"
-                formaction="{{ url_for('copr.update_dh_history', project_id=project.id)}}">
-          Update build history
-        </button>
-      </form>
+      <!--<form>-->
+        <!--<button class="btn btn-default"-->
+                <!--formmethod="post"-->
+                <!--formaction="{{ url_for('copr.update_dh_history', project_id=project.id)}}">-->
+          <!--Update build history-->
+        <!--</button>-->
+      <!--</form>-->
     </span>
     {% endif %}
   </h1>
@@ -89,8 +89,8 @@
               {% endif %}
             </dd>
 
-            <dt>Local repo</dt>
-            <dd> {{ project.local_repo_exists }}</dd>
+            <!--<dt>Local repo</dt>-->
+            <!--<dd> {{ project.local_repo_exists }}</dd>-->
 
             {% if project.dockerhub_build_status %}
             <dt>Dockerhub status</dt>
@@ -108,20 +108,21 @@
               </span>
 
             </dd>
+
             <dt>Dockerhub updated</dt>
             <dd>
               {{ project.dockerhub_latest_build_updated_on }}
             </dd>
             {% endif %}
 
-            <dt>DH build is finished</dt>
-            <!--<dd> {{ project.build_is_running }}</dd>-->
-            <dd> {{ project.is_dh_build_finished }}</dd>
+            <!--<dt>DH build is finished</dt>-->
+            <!--&lt;!&ndash;<dd> {{ project.build_is_running }}</dd>&ndash;&gt;-->
+            <!--<dd> {{ project.is_dh_build_finished }}</dd>-->
 
 
 
-            <hr />
-            {{ project.local_repo_pushed_on }}
+            <!--<hr />-->
+            <!--{{ project.local_repo_pushed_on }}-->
             <!--{% for k, v in project.__dict__.items() %}-->
               <!--<dt>{{k}}</dt>-->
               <!--<dd>{{v}}</dd>-->
