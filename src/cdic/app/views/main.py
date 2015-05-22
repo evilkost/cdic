@@ -3,7 +3,7 @@ import json
 
 from flask import Blueprint, request, abort, render_template, flash, g, redirect, url_for
 # from werkzeug import check_password_hash, generate_password_hash
-import requests
+
 from sqlalchemy.orm.exc import NoResultFound
 import logging
 
@@ -73,6 +73,7 @@ def project_create_handle():
     if form.validate_on_submit():
         project = add_project_from_form(g.user, form)
         project.local_text = "FROM fedora:latest \n"
+        project.patched_dockerfile = ""
         event = create_project_event(project, "Created")
         db.session.add_all([project, event])
         db.session.commit()
@@ -93,7 +94,7 @@ def project_edit(project_id):
 
         event = create_project_event(project, "Edited",
                                      data_json=json.dumps(form.data),
-                                     event_type="edited")
+                                     event_type=EventType.PROJECT_EDITED)
         update_patched_dockerfile(project)
         db.session.add_all([project, event])
         db.session.commit()
@@ -117,52 +118,3 @@ def project_start_build(project_id):
     schedule_build(project)
     flash("Build scheduled", "success")
     return redirect(url_for("main.project_details", project_id=project.id))
-
-
-
-# @main_bp.route("/hooks/dockerhub/", methods=["POST"])
-# def dockerhub_web_hook():
-#     try:
-#         # data = json.loads(request.data.decode("utf-8"))
-#         data = request.json
-#     except Exception as err:
-#         log.exception(err)
-#         return str(err), 400
-#
-#     docker_name = data["repository"]["name"]
-#     project = get_project_by_dockerhub_name(docker_name)
-#
-#     try:
-#         # todo: should spawn a celery task
-#         docker_builds = get_builds_history(app.config, project.repo_name)
-#         if docker_builds:
-#             docker_builds.sort(key=lambda x: x["created_on"])
-#             build_info = docker_builds[-1]
-#             project.dockerhub_build_status = build_info["status"]
-#             project.dockerhub_build_status_updated_on = build_info["updated_on"]
-#             db.session.add(create_project_event(project, "Updated docker build status"))
-#
-#     except Exception as err:
-#         log.exception("Failed to get build history from Dockerhub")
-#
-#     pe = create_project_event(
-#         project, "Received web hook request",
-#         data_json=json.dumps(data), event_type=EventType.WEBHOOK_CALLED
-#     )
-#
-#     db.session.add_all([pe, project])
-#     db.session.commit()
-#
-#     target_url = url_for("main.project_details", project_id=project.id, _external=True)
-#     requests.post(
-#         url=data["callback_url"],
-#         data=json.dumps(
-#             {
-#                 "state": "success",
-#                 "description": "build info updated",
-#                 "context": "Copr Docker Image Composer",
-#                 "target_url": target_url
-#             }
-#         )
-#     )
-#     return "Ok", 200

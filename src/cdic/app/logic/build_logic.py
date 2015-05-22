@@ -10,7 +10,7 @@ from ..models import Project
 from ..constants import EventType
 from ..logic.event_logic import create_project_event
 from ..logic.github_logic import set_github_repo_created
-from ..logic.dockerhub_logic import create_dockerhub_task
+from ..logic.dockerhub_logic import create_dockerhub_task, update_dockerhub_build_status_task
 from ..logic.project_logic import update_patched_dockerfile, get_project_by_id, get_running_projects
 from ..util.github import GhClient
 from ..builder import push_build
@@ -48,6 +48,7 @@ def run_build(project_id):
     project.build_is_running = False
     db.session.add(project)
     db.session.commit()
+    schedule_task(update_dockerhub_build_status_task, project_id)
 
 
 def create_single_github_repo(prj: Project, *args, **kwargs):
@@ -78,7 +79,7 @@ def reschedule_stall_builds(*args, **kwargs):
         && (now - build_start_on) > 120 seconds
     and send build task again
     """
-    project_list = get_running_projects().all()
+    project_list = get_running_projects()
     if not project_list:
         log.debug("No builds to reschedule")
         return

@@ -1,21 +1,22 @@
 # coding: utf-8
 import json
-from flask import Blueprint, g, request, abort, render_template, flash, g, session, redirect, url_for
+
+from flask import Blueprint, request, render_template, redirect, url_for
+
 # from werkzeug import check_password_hash, generate_password_hash
-from sqlalchemy.orm.exc import NoResultFound
 import logging
 
 
 log = logging.getLogger(__name__)
 
 from .. import db
+from ..async.pusher import schedule_task
 from ..views.auth import login_required
-from ..logic.user_logic import get_user_by_name
 from ..logic.copr_logic import create_link, get_link_by_id
-from ..logic.project_logic import add_project_from_form, get_projects_by_user, \
-    get_all_projects_query, get_project_by_id, update_project_from_form, update_patched_dockerfile
+from ..logic.project_logic import get_project_by_id, update_patched_dockerfile
 from ..logic.event_logic import create_project_event
 from ..forms.copr import CoprSearchLinkForm
+from ..logic.dockerhub_logic import update_dockerhub_build_status_task
 
 copr_bp = Blueprint("copr", __name__)
 
@@ -67,3 +68,10 @@ def unlink(project_id, link_id):
         db.session.delete(link)
         db.session.commit()
     return redirect(url_for("copr.search_and_link", project_id=project_id))
+
+@copr_bp.route("/projects/<project_id>/update_build_history", methods=["POST"])
+@login_required
+def update_dh_history(project_id):
+    # update_dockerhub_build_status(project_id)
+    schedule_task(update_dockerhub_build_status_task, project_id)
+    return redirect(url_for("main.project_details", project_id=project_id))

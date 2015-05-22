@@ -12,8 +12,6 @@ pyLibravatar
 # pydns
 requests
 gitpython
-robobrowser
-# MechanicalSoup
 redis
 asyncio_redis
 ipdb

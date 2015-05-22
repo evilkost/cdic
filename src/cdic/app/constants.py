@@ -13,6 +13,6 @@ class SourceType(object):
 
 class EventType(object):
 
+    PROJECT_EDITED = "project_edited"
     BUILD_REQUESTED = "build_requested"
-    WEBHOOK_CALLED = "webhook_called"
 

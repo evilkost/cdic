@@ -6,7 +6,7 @@ import os
 from flask import abort
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.query import Query
-from sqlalchemy.sql import true, or_
+from sqlalchemy.sql import true, or_, false
 
 from .. import app
 from ..constants import SourceType
@@ -61,8 +61,23 @@ def get_project_by_dockerhub_name(name: str) -> Project:
 
 
 def get_running_projects() -> "List[Project]":
-    return Project.query.filter(Project.build_is_running == true())
+    return Project.query.filter(Project.build_is_running == true()).all()
 
+def get_projects_to_create_dh() -> "List[Project]":
+    return (
+        Project.query
+        .filter(Project.github_repo_exists == true())
+        .filter(Project.dockerhub_repo_exists == false())
+    ).all()
+
+def get_projects_to_update_dh_status() -> "List[Project]":
+    return [
+        project for project in
+        (Project.query
+            .filter(Project.dockerhub_repo_exists == true())
+            .filter(Project.local_repo_pushed_on.isnot(None)).all())
+        if not project.is_dh_build_finished
+    ]
 
 def get_project_waiting_for_push() -> "List[Project]":
     return (

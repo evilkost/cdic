@@ -81,7 +81,9 @@ class Project(db.Model):
     local_repo_pushed_on = db.Column(db.DateTime)
 
     dockerhub_build_status = db.Column(db.String(32))
-    dockerhub_build_status_updated_on = db.Column(db.String(32))
+    # dockerhub_build_status_updated_on = db.Column(db.String(32))
+    dockerhub_latest_build_started_on = db.Column(db.DateTime)
+    dockerhub_latest_build_updated_on = db.Column(db.DateTime)
 
     source_mode = db.Column(db.String(40), default=SourceType.LOCAL_TEXT,
                             server_default=SourceType.LOCAL_TEXT)
@@ -95,9 +97,19 @@ class Project(db.Model):
     github_repo_exists = db.Column(db.Boolean, default=False)
     dockerhub_repo_exists = db.Column(db.Boolean, default=False)
 
-    # @property
-    # def is_editable(self):
-    #     return not self.build_is_running
+    @property
+    def is_dh_build_finished(self) -> bool:
+        if not self.dockerhub_repo_exists or \
+                self.local_repo_pushed_on is None or \
+                self.dockerhub_build_status is None or \
+                self.dockerhub_latest_build_updated_on is None:
+            return False
+
+        if "finished" in self.dockerhub_build_status.lower() and \
+                self.local_repo_pushed_on < self.dockerhub_latest_build_updated_on:
+            return True
+        else:
+            return False
 
     @property
     def repo_name(self):
@@ -110,6 +122,7 @@ class Project(db.Model):
         else:
             return "/".join([app.config["GITHUB_URL"], app.config["GITHUB_USER"],
                              self.repo_name])
+
     @property
     def github_push_url(self):
         if not self.github_repo_exists:

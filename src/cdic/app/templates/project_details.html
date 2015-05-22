@@ -24,7 +24,16 @@
     <span class="small pull-right">
       <a class="btn btn-default" href="{{ url_for('main.project_edit', project_id=project.id)}}">Edit</a>
       <a class="btn btn-default" href="{{ url_for('copr.search_and_link', project_id=project.id)}}">Link coprs</a>
+
       <a class="btn btn-primary" href="{{ url_for('main.project_start_build', project_id=project.id)}}">Run build</a>
+
+      <form>
+        <button class="btn btn-default"
+                formmethod="post"
+                formaction="{{ url_for('copr.update_dh_history', project_id=project.id)}}">
+          Update build history
+        </button>
+      </form>
     </span>
     {% endif %}
   </h1>
@@ -84,23 +93,35 @@
             <dd> {{ project.local_repo_exists }}</dd>
 
             {% if project.dockerhub_build_status %}
-            <dt>Dockerhub auto-build status</dt>
+            <dt>Dockerhub status</dt>
 
             <dd>
-              <span class="label label-info"> {{ project.dockerhub_build_status}} </span>
-              &nbsp;updated: {{ project.dockerhub_build_status_updated_on }}
+              <span class="label
+                {% if 'Finished' in project.dockerhub_build_status %}
+                  label-success
+                {% else %}
+                  label-info
+                {% endif %}
+
+              ">
+                {{ project.dockerhub_build_status}}
+              </span>
+
+            </dd>
+            <dt>Dockerhub updated</dt>
+            <dd>
+              {{ project.dockerhub_latest_build_updated_on }}
             </dd>
             {% endif %}
 
-            <dt>Build is running</dt>
-            <dd> {{ project.build_is_running }}</dd>
+            <dt>DH build is finished</dt>
+            <!--<dd> {{ project.build_is_running }}</dd>-->
+            <dd> {{ project.is_dh_build_finished }}</dd>
 
-            {% if project.build_is_running %}
 
-            {% endif %}
 
             <hr />
-
+            {{ project.local_repo_pushed_on }}
             <!--{% for k, v in project.__dict__.items() %}-->
               <!--<dt>{{k}}</dt>-->
               <!--<dd>{{v}}</dd>-->

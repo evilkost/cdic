@@ -32,3 +32,7 @@ class PopenError(Exception):
 
 class DockerHubCreateRepoError(PopenError):
     pass
+
+
+class DockerHubQueryError(PopenError):
+    pass
