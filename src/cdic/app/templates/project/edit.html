@@ -1,7 +1,21 @@
 {% extends "base.html" %}
 
 {% block inner_content %}
-  <h1> Editing project: {{ project.title }} </h1>
+  <ol class="breadcrumb">
+    <li><a href="/">Home</a></li>
+    <li>
+      <a href="{{ url_for('project.list_by_user',username=project.user.username) }}">
+        {{ project.user.username }}
+      </a>
+    </li>
+    <li><a href="{{ url_for('project.details', project_id=project.id) }}">
+      {{ project.title }}
+    </a></li>
+    <li class="active">Editing project</li>
+  </ol>
+
+
+  <h1 class="text-center"> Editing project: {{ project.title }} </h1>
   <p class="pull-right">
     <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
     <a href="https://docs.docker.com/reference/builder/">Dockerfile format reference</a>

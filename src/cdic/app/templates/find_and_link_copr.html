@@ -1,11 +1,21 @@
 {% extends "base.html" %}
 
 {% block inner_content %}
-
-  <h1> Linking coprs to project:
-    <a href="{{ url_for('project.details', project_id=project.id) }}">
+  <ol class="breadcrumb">
+    <li><a href="/">Home</a></li>
+    <li>
+      <a href="{{ url_for('project.list_by_user',username=project.user.username) }}">
+        {{ project.user.username }}
+      </a>
+    </li>
+    <li><a href="{{ url_for('project.details', project_id=project.id) }}">
       {{ project.title }}
-    </a>
+    </a></li>
+    <li class="active">Linking coprs</li>
+  </ol>
+
+  <h1 class="text-center"> Linking coprs to project:
+    {{ project.title }}
   </h1>
 
   <div class="row">

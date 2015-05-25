@@ -18,6 +18,17 @@
 
 
 {% block inner_content %}
+  <ol class="breadcrumb">
+    <li><a href="/">Home</a></li>
+    <li>
+      <a href="{{ url_for('project.list_by_user',username=project.user.username) }}">
+        {{ project.user.username }}
+      </a>
+    </li>
+    <li><a class="active" href="{{ url_for('project.details', project_id=project.id) }}">
+      {{ project.title }}
+    </a></li>
+  </ol>
 
   <h1>Project: {{ project.title }}
     {% if g.user == project.user %}

@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 
 {% block inner_content %}
+<ol class="breadcrumb">
+  <li><a href="/">Home</a></li>
+  <li>
+    <a class="active" href="{{ url_for('project.list_by_user',username=owner.username) }}">
+      {{ owner.username }}
+    </a>
+  </li>
+</ol>
 
 <div class="panel panel-default">
   <div class="panel-heading">
