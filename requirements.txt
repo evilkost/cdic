@@ -15,7 +15,7 @@ gitpython
 redis
 asyncio_redis
 ipdb
-
+backports.typing
 
 tox
 pytest

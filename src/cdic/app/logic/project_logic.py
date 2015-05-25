@@ -3,6 +3,8 @@ import datetime
 from io import StringIO
 import os
 
+from backports.typing import Iterable, List
+
 from flask import abort
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.query import Query
@@ -19,12 +21,12 @@ def get_all_projects_query() -> Query:
     return Project.query.order_by(Project.created_on.desc())
 
 
-def get_projects_by_user(user: User) -> Query:
+def get_projects_by_user(user: User) -> List[User]:
     """
     :param User user: user instance
     :return query to List[Project]: projects owned by `user`
     """
-    return Project.query.filter(User.id == user.id)
+    return Project.query.filter(User.id == user.id).all()
 
 
 def get_project_by_title(user: User, title: str) -> Project:
@@ -60,17 +62,17 @@ def get_project_by_dockerhub_name(name: str) -> Project:
     ).one()
 
 
-def get_running_projects() -> "List[Project]":
+def get_running_projects() -> List[Project]:
     return Project.query.filter(Project.build_is_running == true()).all()
 
-def get_projects_to_create_dh() -> "List[Project]":
+def get_projects_to_create_dh() -> List[Project]:
     return (
         Project.query
         .filter(Project.github_repo_exists == true())
         .filter(Project.dockerhub_repo_exists == false())
     ).all()
 
-def get_projects_to_update_dh_status() -> "List[Project]":
+def get_projects_to_update_dh_status() -> List[Project]:
     return [
         project for project in
         (Project.query
@@ -79,7 +81,7 @@ def get_projects_to_update_dh_status() -> "List[Project]":
         if not project.is_dh_build_finished
     ]
 
-def get_project_waiting_for_push() -> "List[Project]":
+def get_project_waiting_for_push() -> List[Project]:
     return (
         Project.query
         .filter(Project.build_is_running == true())  # just to be sure,
@@ -116,11 +118,12 @@ def update_project_from_form(project: Project, form: ProjectForm) -> Project:
     project.source_mode = form.source_mode.data
     project.local_text = form.local_text.data
     project.git_url = form.git_url.data
+    return project
 
 
 def path_dockerfile_for_project(project: Project, dockerfile: str=None) -> str:
     dockerfile = dockerfile or ""
-    coprs_names = [lc.full_name for lc in project.linked_coprs]
+    coprs_names = [lc.full_name for lc in project.linked_coprs]  # type: List[str]
     return patch_dockerfile(coprs_names, dockerfile)
 
 BEGIN_CDIC_SECTION = ("### DOPR START, code until tag `DOPR END`"
@@ -128,7 +131,7 @@ BEGIN_CDIC_SECTION = ("### DOPR START, code until tag `DOPR END`"
 END_CDIC_SECTION = "### DOPR END\n\n"
 
 
-def patch_dockerfile(copr_names: "List[str]", dockerfile: str) -> str:
+def patch_dockerfile(copr_names: Iterable[str], dockerfile: str) -> str:
 
     out = StringIO()
     before_from = True

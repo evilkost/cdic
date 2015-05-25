@@ -1,9 +1,6 @@
 # coding: utf-8
-import json
 
 import logging
-
-from sqlalchemy.sql import true, false
 
 from .. import db
 from ..util.dockerhub import create_dockerhub_automated_build_repo, get_builds_history
@@ -14,14 +11,6 @@ from ..async.task import OnDemandTask
 from ..async.pusher import PREFIX, ctx_wrapper, schedule_task
 
 log = logging.getLogger(__name__)
-
-
-def get_pending_docker_create_repo_list() -> "Iterable[Project]":
-    return (
-        Project.query
-        .filter(Project.github_repo_exists == true())
-        .filter(Project.dockerhub_repo_exists == false())
-    )
 
 
 def set_docker_repo_created(project: Project):
@@ -37,7 +26,7 @@ def set_docker_repo_created(project: Project):
     db.session.add_all([project, pe])
 
 
-def create_dockerhub_repo(project_id):
+def create_dockerhub_repo(project_id: int):
     project = get_project_by_id(project_id)
     create_dockerhub_automated_build_repo(project.repo_name)
     set_docker_repo_created(project)
@@ -51,7 +40,7 @@ create_dockerhub_task = OnDemandTask(
 )
 
 
-def update_dockerhub_build_status(project_id):
+def update_dockerhub_build_status(project_id: int):
     project = get_project_by_id(project_id)
     builds = get_builds_history(project.repo_name)
     if builds:

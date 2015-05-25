@@ -75,7 +75,6 @@ class Runner(object):
             log.exception("Error during execution of {}".format(odt.name))
         log.debug("Task: {} finished in: {}".format(odt.name,  time.time() - start_time))
 
-
     @coroutine
     def subscribe_on_demand_tasks(self):
         # todo: get host/port from app.config

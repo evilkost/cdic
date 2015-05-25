@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import datetime
-
+from backports.typing import Iterable
 
 from sqlalchemy import UniqueConstraint
 
@@ -38,7 +38,7 @@ class User(db.Model):
     updated_on = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         Return the short username of the user, e.g. bkabrda
         """
@@ -54,6 +54,22 @@ class User(db.Model):
     #         return libravatar_url(email=self.mail, https=True)
     #     except IOError:
     #         return ""
+
+class ProjectEvent(db.Model):
+
+    __tablename__ = "project_event"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    project_id = db.Column(db.Integer, db.ForeignKey("project.id"))
+    project = db.relationship("Project", backref=db.backref("history_events", lazy="dynamic"))
+
+    created_on = db.Column(db.DateTime, default=db.func.now())
+
+    human_text = db.Column(db.Text)
+
+    optional_data_json = db.Column(db.Text)
+    optional_event_type = db.Column(db.String(32))
 
 
 class Project(db.Model):
@@ -132,11 +148,11 @@ class Project(db.Model):
             return False
 
     @property
-    def repo_name(self):
+    def repo_name(self) -> str:
         return '{}{}-{}'.format(app.config["REPO_PREFIX"], self.user.username, self.title).lower()
 
     @property
-    def github_repo_url(self):
+    def github_repo_url(self) -> str:
         if not self.github_repo_exists:
             return None
         else:
@@ -144,7 +160,7 @@ class Project(db.Model):
                              self.repo_name])
 
     @property
-    def github_push_url(self):
+    def github_push_url(self) -> str:
         if not self.github_repo_exists:
             return None
         else:
@@ -155,7 +171,7 @@ class Project(db.Model):
             )
 
     @property
-    def dockerhub_repo_url(self):
+    def dockerhub_repo_url(self) -> str:
         if not self.dockerhub_repo_exists:
             return None
         else:
@@ -167,11 +183,11 @@ class Project(db.Model):
             ])
 
     @property
-    def url_to_hub(self):
+    def url_to_hub(self) -> str:
         return app.config["HUB_PROJECT_URL_TEMPLATE"].format(repo_name=self.repo_name)
 
     @property
-    def recent_events(self):
+    def recent_events(self) -> Iterable[ProjectEvent]:
         return self.history_events.order_by(ProjectEvent.created_on.desc())
 
 
@@ -192,28 +208,10 @@ class LinkedCopr(db.Model):
     UniqueConstraint('project_id', 'username', 'coprname',  name='uix_1')
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         return "{}/{}".format(self.username, self.coprname)
 
     @property
-    def copr_url(self):
+    def copr_url(self) -> str:
         return "/".join([app.config["COPR_BASE_URL"], "coprs",
                         self.username, self.coprname])
-
-
-class ProjectEvent(db.Model):
-
-    __tablename__ = "project_event"
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    project_id = db.Column(db.Integer, db.ForeignKey("project.id"))
-    project = db.relationship("Project", backref=db.backref("history_events", lazy="dynamic"))
-
-    created_on = db.Column(db.DateTime, default=db.func.now())
-
-    human_text = db.Column(db.Text)
-
-    optional_data_json = db.Column(db.Text)
-    optional_event_type = db.Column(db.String(32))
-

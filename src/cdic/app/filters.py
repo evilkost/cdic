@@ -27,7 +27,7 @@ from . import app
 
 
 @app.template_filter('time_ago')
-def time_ago(time_in: datetime):
+def time_ago(time_in: datetime) -> str:
     """ returns string saying how long ago the time on input was
     """
     now = datetime.datetime.utcnow()

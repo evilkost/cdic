@@ -6,12 +6,12 @@ from sqlalchemy.orm.query import Query
 from ..models import User
 
 
-def get_user_by_name(username: str) -> Query:
+def get_user_by_name(username: str) -> User:
     """
     :param str username: name to query
     :return User: user object
     :raises NoResultFound: when no user with such name
     """
-    return User.query.filter_by(username=username)
+    return User.query.filter_by(username=username).one()
 
 

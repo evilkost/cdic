@@ -38,7 +38,7 @@ def start_build(project_id):
 @project_bp.route("/users/<username>/")
 def list_by_user(username):
     try:
-        owner = get_user_by_name(username).one()
+        owner = get_user_by_name(username)
         return render_template(
             "project/list.html",
             owner=owner,
