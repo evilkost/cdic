@@ -31,7 +31,7 @@ def update_local_repo_and_push(project: Project):
         db.session.add_all([pe, project])
 
     else:
-        raise NotImplementedError("Update of local repo for source: {} "
+        raise NotImplementedError("Update of local repo for source mode: {} "
                                   "not implemented".format(project.source_mode))
 
 
@@ -50,7 +50,7 @@ def init_local_repo(project: Project):
         db.session.add_all([pe, project])
 
     else:
-        raise NotImplementedError("Init of local repo for source: {} "
+        raise NotImplementedError("Init of local repo for source mode: {} "
                                   "not implemented".format(project.source_mode))
 
 
