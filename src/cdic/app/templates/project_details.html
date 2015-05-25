@@ -22,10 +22,10 @@
   <h1>Project: {{ project.title }}
     {% if g.user == project.user %}
     <span class="small pull-right">
-      <a class="btn btn-default" href="{{ url_for('main.project_edit', project_id=project.id)}}">Edit</a>
+      <a class="btn btn-default" href="{{ url_for('project.edit', project_id=project.id)}}">Edit</a>
       <a class="btn btn-default" href="{{ url_for('copr.search_and_link', project_id=project.id)}}">Link coprs</a>
 
-      <a class="btn btn-primary" href="{{ url_for('main.project_start_build', project_id=project.id)}}">Run build</a>
+      <a class="btn btn-primary" href="{{ url_for('project.start_build', project_id=project.id)}}">Run build</a>
 
       <!--<form>-->
         <!--<button class="btn btn-default"-->

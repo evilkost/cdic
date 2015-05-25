@@ -23,7 +23,7 @@
         </ul>
         <ul class="nav navbar-nav navbar-right">
           {% if g.user %}
-            <li class="{% if my_prj_btn_active %} active {% endif %}"><a href="{{ url_for('main.project_list',username=g.user.username) }}">
+            <li class="{% if my_prj_btn_active %} active {% endif %}"><a href="{{ url_for('project.list_by_user',username=g.user.username) }}">
               My ({{ g.user.username }}) projects
             </a> </li>
             <li><a href="/auth/logout">Logout</a></li>

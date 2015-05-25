@@ -44,7 +44,7 @@ def search_and_link(project_id):
                 update_patched_dockerfile(project)
                 db.session.add_all([cl, event, project])
                 db.session.commit()
-                # return redirect(url_for("main.project_details", project_id=project_id))
+                # return redirect(url_for("project.details", project_id=project_id))
             else:
                 form.copr_name.errors.append("That copr is already linked, "
                                              "probably you want to line another one?")
@@ -74,4 +74,4 @@ def unlink(project_id, link_id):
 def update_dh_history(project_id):
     # update_dockerhub_build_status(project_id)
     schedule_task(update_dockerhub_build_status_task, project_id)
-    return redirect(url_for("main.project_details", project_id=project_id))
+    return redirect(url_for("project.details", project_id=project_id))

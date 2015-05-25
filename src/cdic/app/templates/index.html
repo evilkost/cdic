@@ -32,11 +32,11 @@
           {% for prj in project_list %}
              <li class="list-group-item">
                <h4>
-                 <a href="{{ url_for('main.project_details', project_id=prj.id) }}">
+                 <a href="{{ url_for('project.details', project_id=prj.id) }}">
                    {{ prj.title }}
                  </a> by
                  <small>
-                   <a href="{{ url_for('main.project_list', username=prj.user.username) }}">
+                   <a href="{{ url_for('project.list_by_user', username=prj.user.username) }}">
                     {{ prj.user.username }}
                    </a>
                  </small>

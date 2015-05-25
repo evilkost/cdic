@@ -3,7 +3,7 @@
 {% block inner_content %}
 
   <h1> Linking coprs to project:
-    <a href="{{ url_for('main.project_details', project_id=project.id) }}">
+    <a href="{{ url_for('project.details', project_id=project.id) }}">
       {{ project.title }}
     </a>
   </h1>

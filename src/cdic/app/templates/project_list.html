@@ -7,7 +7,7 @@
     <h3>Projects by: {{ owner.username }}
       {% if owner==g.user %}
         <div class="pull-right">
-          <a class="btn btn-default" href="{{ url_for('main.project_create_view')}}">
+          <a class="btn btn-default" href="{{ url_for('project.create_view')}}">
             <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
             Add new project
           </a>
@@ -22,11 +22,11 @@
     {% for prj in project_list %}
     <div class="panel panel-default">
       <div class="panel-body">
-        <h3><a href="{{ url_for('main.project_details', project_id=prj.id) }}">{{ prj.title }}</a>
+        <h3><a href="{{ url_for('project.details', project_id=prj.id) }}">{{ prj.title }}</a>
         <span class="pull-right">
           <div class="btn-group" role="group" aria-label="...">
             {% if g.user == prj.user %}
-              <a href="{{ url_for('main.project_edit', project_id=prj.id)}}"
+              <a href="{{ url_for('project.edit', project_id=prj.id)}}"
                  class="btn btn-default">Edit</a>
               <button type="button" class="btn btn-default">Build</button>
             {% endif %}
