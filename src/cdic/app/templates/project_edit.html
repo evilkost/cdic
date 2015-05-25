@@ -5,13 +5,15 @@
 
 {% block inner_content %}
   <h1> Editing project: {{ project.title }} </h1>
-
+  <p class="pull-right">
+    <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+    <a href="https://docs.docker.com/reference/builder/">Dockerfile format reference</a>
+  </p>
   <form class="form form-horizontal" method="post" role="form">
     {{ form.hidden_tag() }}
     {{ wtf.form_errors(form, hiddens="only") }}
 
     <input type="hidden" name="title" value="{{ project.title }}" />
-
     <!--<div class="form-group ">-->
       <!--<label class="control-label" for="source_mode">-->
         <!--Select source mode for project-->
@@ -30,6 +32,8 @@
 
      <button type="submit" class="btn btn-default">Submit</button>
   </form>
+
+
 
 
 {% endblock %}
