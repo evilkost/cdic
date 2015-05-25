@@ -37,7 +37,7 @@ def list_by_user(username):
     try:
         owner = get_user_by_name(username).one()
         return render_template(
-            "project_list.html",
+            "project/list.html",
             owner=owner,
             my_prj_btn_active=True,
             project_list=get_projects_by_user(owner)
@@ -49,14 +49,14 @@ def list_by_user(username):
 @project_bp.route("/projects/<project_id>/")
 def details(project_id):
     project = get_project_by_id(int(project_id))
-    return render_template("project_details.html", project=project)
+    return render_template("project/details.html", project=project)
 
 @project_bp.route("/projects/add", methods=["GET"])
 @login_required
 def create_view(form=None):
     if not form:
         form = ProjectForm()
-    return render_template("project_add.html", form=form)
+    return render_template("project/add.html", form=form)
 
 @project_bp.route("/projects/add", methods=["POST"])
 @login_required
@@ -98,5 +98,5 @@ def edit(project_id):
             # if not user should source fields
             return redirect(url_for("project.details", project_id=project.id))
 
-    return render_template("project_edit.html", project=project, form=form)
+    return render_template("project/edit.html", project=project, form=form)
 

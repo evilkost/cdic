@@ -4,21 +4,30 @@
   <div class="starter-template">
     <div class="jumbotron">
 
-      <h1>DOPR Other Package Repositories</h1>
-      <h2>What is it about?</h2>
-      <p>Dopr is a simple service to create docker images with embedded copr repos as a software sources.</p>
+
+      <div class="row">
+        <div class="col-xs-12 col-md-8">
+          <h1>DOPR Other Package Repositories</h1>
+          <h3>Dopr is a simple service to create docker images with embedded copr repos as a software sources.</h3>
+        </div>
+        <div class="col-xs-6 col-md-4">
+          <h4>
+            Current workflow consists of the following steps
+          </h4>
+          <ul class="list-group">
+            <li class="list-group-item">Create new project</li>
+            <li class="list-group-item">Provide source Dockerfile and link required coprs</li>
+            <li class="list-group-item">Press <code>Run build</code> and wait for results</li>
+            <li class="list-group-item">Use <code>docker pull &lt;repo-name&gt;</code> like with any other public docker image</li>
+          </ul>
+
+
+        </div>
+      </div>
+
 
       <div id="callout-navbar-breakpoint" class="bs-callout bs-callout-info">
-        <h4>
-          Current workflow consists of the following steps
-        </h4>
-        <ul class="list-group">
-          <li class="list-group-item">Login using your <a href="https://fedoraproject.org/wiki/OpenID">fedora openid</a></li>
-          <li class="list-group-item">Create new project</li>
-          <li class="list-group-item">Provide source Dockerfile and link copr repos</li>
-          <li class="list-group-item">Press <button class="btn btn-primary" disabled>Run build</button> and wait for results</li>
-          <li class="list-group-item">Use <code>docker pull &lt;repo-name&gt;</code> like with any other public docker image</li>
-        </ul>
+
 
       </div>
 
