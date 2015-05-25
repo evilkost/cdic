@@ -3,11 +3,13 @@
 import os
 import sys
 import logging
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, url_for
+import flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
+from werkzeug.utils import redirect
 
-
+from .exceptions import AccessRejected
 from .util.git import GitStore
 
 app = Flask(__name__)
@@ -58,3 +60,8 @@ if __name__ == "__main__":
         format='[%(asctime)s][%(threadName)10s][%(levelname)6s][%(name)s]: %(message)s',
         level=logging.DEBUG
     )
+
+@app.errorhandler(AccessRejected)
+def access_rejected_handler(error):
+    flask.flash(str(error), "danger")
+    return redirect(url_for("main.index"))

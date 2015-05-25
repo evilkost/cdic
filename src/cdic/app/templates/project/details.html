@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% import "bootstrap/utils.html" as utils %}
+
 
 <!-- for Dockerfile highlighting -->
 {% block styles %}
@@ -48,7 +48,7 @@
     </span>
     {% endif %}
   </h1>
-  {{ utils.flashed_messages(container=False) }}
+
   <div class="row">
     <div class="col-xs-12 col-md-6">
       <div class="panel panel-default">
@@ -80,7 +80,7 @@
             <dd>{{ project.dockerfile_path|default("/") }}</dd>
             {% endif %}
 
-            <dt>Auto-build repos:</dt>
+            <dt>Dependent repos:</dt>
             <dd>
               {% if project.github_repo_exists %}
                 <a href="{{ project.github_repo_url }}">

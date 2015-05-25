@@ -1,7 +1,7 @@
 # coding: utf-8
 import json
 
-from flask import Blueprint, request, render_template, redirect, url_for
+from flask import Blueprint, request, render_template, redirect, url_for, g
 
 # from werkzeug import check_password_hash, generate_password_hash
 import logging
@@ -25,7 +25,7 @@ copr_bp = Blueprint("copr", __name__)
 @login_required
 def search_and_link(project_id):
     project = get_project_by_id(int(project_id))
-
+    project.check_editable_by(g.user)
     form = CoprSearchLinkForm()
 
     if request.method == "POST" and form.validate_on_submit():
@@ -57,6 +57,8 @@ def unlink(project_id, link_id):
     link = get_link_by_id(link_id)
     if link:
         project = link.project
+        project.check_editable_by(g.user)
+
         update_patched_dockerfile(project)
 
         event = create_project_event(

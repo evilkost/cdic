@@ -12,6 +12,7 @@ from sqlalchemy import UniqueConstraint
 from . import constants
 from . import db, app
 # from . import helpers
+from .exceptions import AccessRejected
 from .constants import SourceType
 
 
@@ -96,6 +97,14 @@ class Project(db.Model):
 
     github_repo_exists = db.Column(db.Boolean, default=False)
     dockerhub_repo_exists = db.Column(db.Boolean, default=False)
+
+    def is_editable_by(self, user: User) -> bool:
+        return self.user.id == user.id
+
+    def check_editable_by(self, user: User) -> None:
+        if not self.is_editable_by(user):
+            raise AccessRejected("User `{}` doesn't have rights to edit project `{}`"
+                                 .format(user.username, self.repo_name))
 
     @property
     def is_dh_build_finished(self) -> bool:

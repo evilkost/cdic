@@ -1,4 +1,8 @@
 # coding: utf-8
+
+class AccessRejected(Exception):
+    pass
+
 class PatchDockerfileException(Exception):
     pass
 

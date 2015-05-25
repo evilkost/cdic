@@ -24,6 +24,7 @@ project_bp = Blueprint("project", __name__)
 @login_required
 def start_build(project_id):
     project = get_project_by_id(int(project_id))
+    project.check_editable_by(g.user)
     if project.build_is_running:
         flash("Build request is already being processed, please wait", "danger")
         return redirect(url_for("project.details", project_id=project.id))
@@ -80,6 +81,8 @@ def create_handle():
 @login_required
 def edit(project_id):
     project = get_project_by_id(int(project_id))
+    project.check_editable_by(g.user)
+
     form = ProjectForm(obj=project)
 
     if request.method == "POST" and form.validate_on_submit():
