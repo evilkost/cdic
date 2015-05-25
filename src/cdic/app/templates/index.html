@@ -2,10 +2,30 @@
 
 {% block inner_content %}
   <div class="starter-template">
-    <h1>DOPR Other Package Repositories</h1>
+    <div class="jumbotron">
+
+      <h1>DOPR Other Package Repositories</h1>
+      <h2>What is it about?</h2>
+      <p>Dopr is a simple service to create docker images with embedded copr repos as a software sources.</p>
+
+      <div id="callout-navbar-breakpoint" class="bs-callout bs-callout-info">
+        <h4>
+          Current workflow consists of the following steps
+        </h4>
+        <ul class="list-group">
+          <li class="list-group-item">Login using your <a href="https://fedoraproject.org/wiki/OpenID">fedora openid</a></li>
+          <li class="list-group-item">Create new project</li>
+          <li class="list-group-item">Provide source Dockerfile and link copr repos</li>
+          <li class="list-group-item">Press <button class="btn btn-primary" disabled>Run build</button> and wait for results</li>
+          <li class="list-group-item">Use <code>docker pull &lt;repo-name&gt;</code> like with any other public docker image</li>
+        </ul>
+
+      </div>
+
+    </div>
     <div class="panel panel-default">
       <div class="panel-heading">
-        <b>New projects</b>
+        <b>Latest projects</b>
       </div>
       <div class="panel-body">
         <ul class="list-group">
@@ -15,12 +35,18 @@
                  <a href="{{ url_for('main.project_details', project_id=prj.id) }}">
                    {{ prj.title }}
                  </a> by
-                 <small><a href="{{ url_for('main.project_list', username=prj.user.username) }}">
-                   {{ prj.user.username }}
-                 </a></small>
+                 <small>
+                   <a href="{{ url_for('main.project_list', username=prj.user.username) }}">
+                    {{ prj.user.username }}
+                   </a>
+                 </small>
 
                  <span class="pull-right small">
-                    Last build: <i>not started</i>
+                    {% if prj.dockerhub_repo_exists %}
+                    <a href="{{ prj.dockerhub_repo_url }}">
+                      DockerHub
+                    </a>
+                    {% endif %}
                  </span>
                </h4>
              </li>

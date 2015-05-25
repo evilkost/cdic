@@ -60,29 +60,6 @@ def get_builds_history(repo_name: str) -> "List[dict]":
                                   .format(std_out, " ".join(cmd)))
 
 
-# def get_builds_history_old(config, repo_name: str):
-#     br = RBP()
-#
-#     start_url = config["HUB_PROJECT_URL_TEMPLATE"].format(repo_name=repo_name)
-#
-#     br.open_url(start_url)
-#     br.open_link_by_text("Build Details")
-#     page = br.browser
-#     table = page.find(text="Builds History").next
-#
-#     builds = []
-#     for row in table.find_all("tr")[1:]:
-#         fields = dict(enumerate(row.find_all("td")))
-#         build = {
-#             "build_id": fields[0].text,
-#             "status": fields[1].text,
-#             "created_on": dt_parse(fields[2].attrs["utc-date"]),
-#             "updated_on": dt_parse(fields[3].attrs["utc-date"]),
-#         }
-#         builds.append(build)
-#     return builds
-
-
 def create_dockerhub_automated_build_repo(repo_name):
     """
     Create new automated build at dockerhub using phantomjs/casperjs

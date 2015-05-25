@@ -14,9 +14,9 @@ DATABASE_CONNECT_OPTIONS = {}
 CSRF_ENABLED = True
 CSRF_SESSION_KEY = "somethingimpossibletoguess"
 
-VAR_ROOT = "/tmp/cdic"
-OPENID_STORE = "/tmp/cdic/openid"
-CDIC_WORKPLACE = "/tmp/cdic/wp"
+VAR_ROOT = "/var/lib/cdic"
+OPENID_STORE = "/var/lib/cdic/openid"
+CDIC_WORKPLACE = "/var/lib/cdic/wp"
 
 DOCKERHUB_URL = 'https://hub.docker.com'
 DOCKERREGISTRY_URL = 'https://registry.hub.docker.com'
