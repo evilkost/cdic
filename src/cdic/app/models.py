@@ -107,6 +107,17 @@ class Project(db.Model):
                                  .format(user.username, self.repo_name))
 
     @property
+    def docker_pull_snippet(self) -> str:
+        return "docker pull {}/{}:latest".format(
+            app.config["DOCKERHUB_USERNAME"], self.repo_name)
+
+    @property
+    def is_runnable(self) -> bool:
+        if not self.build_is_running and self.patched_dockerfile:
+            return True
+        return False
+
+    @property
     def is_dh_build_finished(self) -> bool:
         if not self.dockerhub_repo_exists or \
                 self.local_repo_pushed_on is None or \

@@ -143,6 +143,16 @@
             <!--<dt>Auto-build</dt>-->
             <!--<dd>disabled</dd>-->
           </dl>
+
+          {% if project.dockerhub_repo_exists %}
+          <h4 class="text-center">Pull results:</h4>
+          <div class="well">
+                <code>
+                  {{ project.docker_pull_snippet }}
+                </code>
+            </div>
+          {% endif %}
+
         </div>
       </div>
     </div>

@@ -20,6 +20,7 @@ from ..constants import EventType
 
 project_bp = Blueprint("project", __name__)
 
+
 @project_bp.route("/projects/<project_id>/start_build", methods=["GET"])
 @login_required
 def start_build(project_id):
@@ -32,6 +33,7 @@ def start_build(project_id):
     schedule_build(project)
     flash("Build scheduled", "success")
     return redirect(url_for("project.details", project_id=project.id))
+
 
 @project_bp.route("/users/<username>/")
 def list_by_user(username):
@@ -47,10 +49,12 @@ def list_by_user(username):
     except NoResultFound:
         abort(404)
 
+
 @project_bp.route("/projects/<project_id>/")
 def details(project_id):
     project = get_project_by_id(int(project_id))
     return render_template("project/details.html", project=project)
+
 
 @project_bp.route("/projects/add", methods=["GET"])
 @login_required
@@ -58,6 +62,7 @@ def create_view(form=None):
     if not form:
         form = ProjectForm()
     return render_template("project/add.html", form=form)
+
 
 @project_bp.route("/projects/add", methods=["POST"])
 @login_required
@@ -102,4 +107,3 @@ def edit(project_id):
             return redirect(url_for("project.details", project_id=project.id))
 
     return render_template("project/edit.html", project=project, form=form)
-
