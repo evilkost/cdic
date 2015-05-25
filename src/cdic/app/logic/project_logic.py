@@ -26,14 +26,14 @@ def get_projects_by_user(user: User) -> List[User]:
     :param User user: user instance
     :return query to List[Project]: projects owned by `user`
     """
-    return Project.query.filter(Project.user.id == user.id).all()
+    return Project.query.filter(Project.user_id == user.id).all()
 
 
 def get_project_by_title(user: User, title: str) -> Project:
     """
     :raises NoResultFound: when no such project exists
     """
-    return Project.query.filter(Project.ser.id == user.id).filter_by(title=title).one()
+    return Project.query.filter(Project.user_id == user.id).filter_by(title=title).one()
 
 
 def get_project_by_id(ident: int) -> Project:
