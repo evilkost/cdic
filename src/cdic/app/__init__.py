@@ -16,7 +16,8 @@ app = Flask(__name__)
 
 # oid = OpenID(app, app.config["OPENID_STORE"], safe_roots=[])
 app.config.from_pyfile("../config.py")
-app.config.from_pyfile(os.path.expanduser("~/.config/cdic.py"))
+app.config.from_pyfile("/etc/cdic/cdic_db.py", silent=True)
+app.config.from_pyfile(os.path.expanduser("~/.config/cdic.py"), silent=True)
 
 log = logging.getLogger(__name__)
 

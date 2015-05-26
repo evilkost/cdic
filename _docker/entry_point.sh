@@ -2,7 +2,7 @@
 
 
 cd /opt/cdic/
-git pull --force
+# git pull
 
 /opt/cdic/_docker/first_run.sh
 
