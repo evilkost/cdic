@@ -4,7 +4,7 @@ import datetime
 import logging
 import os
 
-from .util.git import GitStore
+from .util.git import GitStore, AnotherRepoExists
 
 from . import app, db
 from .constants import SourceType
@@ -39,7 +39,11 @@ def init_local_repo(project: Project):
     if project.source_mode == SourceType.LOCAL_TEXT:
         gs = GitStore(app.config["CDIC_WORKPLACE"])
 
-        repo = gs.init_local(project.user.username, project.title)
+        try:
+            repo = gs.init_local(project.user.username, project.title)
+        except AnotherRepoExists:
+            pass
+
         gs.add_remote(repo, project.github_push_url)
         open(os.path.join(repo.working_dir, "Dockerfile"), "wb").close()  # touch Dockerfile
         gs.initial_commit(repo, ["Dockerfile"])

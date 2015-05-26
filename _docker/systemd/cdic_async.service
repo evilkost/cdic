@@ -11,7 +11,7 @@ User=cdic
 Group=cdic
 WorkingDirectory=/opt/cdic/src/cdic
 EnvironmentFile=/etc/pg_env
-Environment="PYTHONPATH=.:$PYTHONPATH"
+Environment="PYTHONPATH=..:$PYTHONPATH"
 # ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s TERM $MAINPID
 ExecStartPre=/opt/cdic/_docker/first_run.sh
