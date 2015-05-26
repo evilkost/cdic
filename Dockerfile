@@ -4,7 +4,16 @@ FROM vpavlin/fedora:systemd
 
 
 RUN yum install -y dnf && \
-    dnf install -y python3 python3-pip python3-gunicorn git redis vim tmux wget npm dnf-plugins-core
+    dnf install -y \
+        python3 \
+        python3-pip \
+        python3-gunicorn \
+        git \
+        redis \
+        vim \
+        wget \
+        dnf-plugins-core \
+        python3-psycopg2
 
 RUN dnf copr enable msuchy/copr -y && \
     dnf install -y phantomjs && \
@@ -19,8 +28,8 @@ RUN mkdir -p /opt/cdic && cd /opt/ && git clone https://github.com/evilkost/cdic
 #COPY src /opt/cdic/src
 #RUN cd /opt/cdic && pip3 install -r requirements.txt
 
-# COPY _docker/private /opt/cdic/_docker/private
-COPY _docker /opt/cdic/_docker
+COPY _docker/private /opt/cdic/_docker/private
+COPY _docker/systemd /opt/cdic/_docker/systemd
 EXPOSE 8000
 
 
@@ -44,7 +53,8 @@ RUN cp /opt/cdic/_docker/systemd/* /etc/systemd/system/ \
 
 VOLUME  ["/etc/cdic", "/var/lib/cdic"]
 
-# CMD ["/opt/cdic/_docker/entry_point.sh"]
+COPY _docker/entry_point.sh /opt/entry_point.sh
 
+ENTRYPOINT ["/opt/entry_point.sh"]
 CMD ["/usr/sbin/init"]
 # TODO: private date shouldn't be embeded into the image, we should provide them from the host system at start

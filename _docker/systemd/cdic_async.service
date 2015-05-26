@@ -10,7 +10,8 @@ PIDFile=/run/cdic/pid_async
 User=cdic
 Group=cdic
 WorkingDirectory=/opt/cdic/src/cdic
-Environment="PYTHONPATH=..:$PYTHONPATH"
+EnvironmentFile=/etc/pg_env
+Environment="PYTHONPATH=.:$PYTHONPATH"
 # ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s TERM $MAINPID
 ExecStartPre=/opt/cdic/_docker/first_run.sh

@@ -106,14 +106,11 @@ class GitStore(object):
 
         return rem.push(refspec, force=True)
 
-
-
     @staticmethod
     def initial_commit(repo: Repo, to_commit: "List[str]",  message: str=None):
         repo.index.add(to_commit)
         msg = message or "Initial commit of {}".format(", ".join(to_commit))
         repo.index.commit(msg)
-
 
     @staticmethod
     def commit_changes(repo: Repo, to_commit: "List[str]",  message: str=None):

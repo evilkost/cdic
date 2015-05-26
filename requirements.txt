@@ -16,6 +16,7 @@ redis
 asyncio_redis
 ipdb
 backports.typing
+# psycopg2 - from system python3-psycopg2
 
 tox
 pytest

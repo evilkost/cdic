@@ -10,6 +10,7 @@ After=network.target
 PIDFile=/run/cdic/pid
 User=cdic
 Group=cdic
+EnvironmentFile=/etc/pg_env
 WorkingDirectory=/opt/cdic/src/cdic
 ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s TERM $MAINPID

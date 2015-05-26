@@ -11,11 +11,9 @@ cd src
 
 
 
-su - cdic -c "alembic upgrade head"
+su cdic -c "alembic upgrade head"
 
 if [ ! -d /home/cdic/.config ]
 then
     su - cdic -c "mkdir -p /home/cdic/.config"
 fi
-
-su - cdic -c "touch /home/cdic/.config/cdic.py"
