@@ -24,13 +24,17 @@ RUN adduser cdic && \
     mkdir -p /opt/cdic && \
     chown -Rf cdic:cdic /opt/cdic
 
+COPY requirements.txt /home/cdic/requirements.txt
+RUN pip3 install -r /home/cdic/requirements.txt
 
-COPY /tmp/cache_buster /tmp/cache_buster
+
+COPY tmp_cache_buster /tmp/cache_buster
 
 RUN cd /opt/ && git clone https://github.com/evilkost/cdic.git && \
     cd /opt/cdic && pip3 install -r requirements.txt
 
-COPY _docker/systemd /opt/cdic/_docker/systemd
+# COPY _docker/systemd /opt/cdic/_docker/systemd
+COPY _docker /opt/cdic/_docker
 
 RUN cp /opt/cdic/_docker/systemd/* /etc/systemd/system/ \
     && cp /opt/cdic/_docker/tmpfiles.d/* /etc/tmpfiles.d/ \
