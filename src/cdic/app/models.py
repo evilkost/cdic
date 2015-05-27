@@ -149,7 +149,7 @@ class Project(db.Model):
 
     @property
     def repo_name(self) -> str:
-        return '{}{}-{}'.format(app.config["REPO_PREFIX"], self.user.username, self.title).lower()
+        return '{}-{}'.format(self.user.username, self.title).lower()
 
     @property
     def github_repo_url(self) -> str:
