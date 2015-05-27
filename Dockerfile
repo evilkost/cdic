@@ -20,12 +20,14 @@ RUN dnf copr enable msuchy/copr -y && \
     cd casperjs && ln -sf `pwd`/bin/casperjs /usr/bin/casperjs && chmod +x /usr/bin/casperjs
 
 EXPOSE 8000
-RUN adduser cdic && chown -Rf cdic:cdic /opt/cdic
+RUN adduser cdic && \
+    mkdir -p /opt/cdic && \
+    chown -Rf cdic:cdic /opt/cdic
 
 
 COPY /tmp/cache_buster /tmp/cache_buster
 
-RUN mkdir -p /opt/cdic && cd /opt/ && git clone https://github.com/evilkost/cdic.git && \
+RUN cd /opt/ && git clone https://github.com/evilkost/cdic.git && \
     cd /opt/cdic && pip3 install -r requirements.txt
 
 COPY _docker/systemd /opt/cdic/_docker/systemd
