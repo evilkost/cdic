@@ -25,7 +25,7 @@
         {{ project.user.username }}
       </a>
     </li>
-    <li><a class="active" href="{{ url_for('project.details', project_id=project.id) }}">
+    <li><a class="active" href="{{ url_for('project.details', username=project.user.username, title=project.title) }}">
       {{ project.title }}
     </a></li>
   </ol>

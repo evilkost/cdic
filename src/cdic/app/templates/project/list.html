@@ -30,7 +30,7 @@
     {% for project in project_list %}
     <div class="panel panel-default">
       <div class="panel-body">
-        <h3><a href="{{ url_for('project.details', project_id=project.id) }}">{{ project.title }}</a>
+        <h3><a href="{{ url_for('project.details', username=project.user.username, title=project.title) }}">{{ project.title }}</a>
         <span class="pull-right">
           <div class="btn-group" role="group" aria-label="...">
             {% if g.user == project.user%}

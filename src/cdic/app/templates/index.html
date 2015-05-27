@@ -8,6 +8,10 @@
       <p> Dopr Other Package Repositories is a service that transforms any Fedora Copr projects into a Docker Image. </p>
       <!--
       <a href="/projects/" class="btn btn-primary"> browse projects </a> -->
+      <a class="btn btn-primary btn-lg" href="{{ url_for('project.create_view')}}">
+        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+        Add new project
+      </a>
     </div>
     <div class="col-lg-2"></div>
     <div class="col-lg-4 col-md-5 col-sm-6">
@@ -40,7 +44,7 @@
           {% for prj in project_list %}
              <li class="list-group-item">
                <h4>
-                 <a href="{{ url_for('project.details', project_id=prj.id) }}">
+                 <a href="{{ url_for('project.details', username=prj.user.username, title=prj.title) }}">
                    {{ prj.title }}
                  </a> by
                  <small>
