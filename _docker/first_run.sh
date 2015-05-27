@@ -4,7 +4,7 @@ env &> /tmp/ga.log
 
 echo "befor"
 cd /opt/cdic
-# git pull
+git pull
 cd /opt/cdic/src
 
 if [ -e /opt/cdic/_docker/init_done ]; then
