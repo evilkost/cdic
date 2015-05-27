@@ -1,0 +1,62 @@
+@import url(https://fonts.googleapis.com/css?family=Comfortaa);
+
+#main-bar {
+  background-image: url('header_background.png');
+  background-repeat: repeat-x;
+  height: 81px;
+  margin-bottom: 26px;
+  color: white;
+  font-family: 'Comfortaa';
+}
+
+#main-bar .container {
+  margin-top: 4px;
+}
+
+#main-bar a {
+  color: white;
+}
+
+#login-menu {
+  margin-bottom: 8px;
+  font-weight: bold;
+  font-size: .9em;
+}
+
+#logo {
+  position: relative;
+  top: 6px;
+  height: 58px;
+}
+
+#copr-docker-img {
+  width: 100%;
+}
+
+h1, h2, h3 {
+  font-family: 'Comfortaa';
+}
+
+.large-banner {
+  font-family: 'Comfortaa';
+  margin-top: 20px;
+  margin-bottom: 30px;
+}
+
+.large-banner p {
+  margin-top: 36px;
+  margin-bottom: 36px;
+  font-size: 1.4em;
+}
+
+.btn-primary {
+  background-color: #1f4b89;
+}
+
+#how-to ol {
+  font-weight: bold;
+}
+
+#how-to ol span {
+  font-weight: normal;
+}
