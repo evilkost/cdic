@@ -7,14 +7,14 @@ log = logging.getLogger(__name__)
 from sqlalchemy.orm.exc import NoResultFound
 from flask import Blueprint, request, abort, render_template, flash, g, redirect, url_for
 
-from .. import db
+from .. import db, app
 from ..views.auth import login_required
 from ..logic.user_logic import get_user_by_name
 from ..logic.build_logic import schedule_build
 from ..logic.project_logic import add_project_from_form, get_projects_by_user, \
     get_project_by_id, update_project_from_form, update_patched_dockerfile, get_project_by_title
 from ..logic.event_logic import create_project_event
-from ..forms.project import ProjectForm
+from ..forms.project import ProjectForm, ProjectCreateForm
 from ..constants import EventType
 
 
@@ -29,7 +29,6 @@ def start_build(project_id):
     if project.build_is_running:
         flash("Build request is already being processed, please wait", "danger")
         return redirect(url_for("project.details", username=project.user.username, title=project.title))
-
 
     schedule_build(project)
     flash("Build scheduled", "success")
@@ -68,16 +67,14 @@ def details(username, title):
 @login_required
 def create_view(form=None):
     if not form:
-        form = ProjectForm()
+        form = ProjectCreateForm()
     return render_template("project/add.html", form=form)
 
 
 @project_bp.route("/projects/add", methods=["POST"])
 @login_required
 def create_handle():
-    # TODO: VALIDATE TITLE TO BE STRICTLY ALPHANUMERICAL
-    log.warn("TODO: VALIDATE TITLE TO BE STRICTLY ALPHANUMERICAL")
-    form = ProjectForm()
+    form = ProjectCreateForm()
     if form.validate_on_submit():
         project = add_project_from_form(g.user, form)
         project.local_text = "FROM fedora:latest \n"

@@ -6,6 +6,7 @@ import os
 from backports.typing import Iterable, List
 
 from flask import abort
+from flask_wtf import Form
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.query import Query
 from sqlalchemy.sql import true, or_, false
@@ -14,7 +15,7 @@ from .. import app
 from ..constants import SourceType
 from ..exceptions import PatchDockerfileException, FailedToFindProjectByDockerhubName
 from ..models import Project, User
-from ..forms.project import ProjectForm
+# from ..forms.project import ProjectForm
 
 
 def get_all_projects_query() -> Query:
@@ -35,7 +36,6 @@ def get_project_by_title(user: User, title: str) -> Project:
     """
     return Project.query.filter(Project.user_id == user.id).filter_by(title=title).one()
 
-
 def get_project_by_id(ident: int) -> Project:
     """
     :raises NoResultFound: when no such project exists
@@ -43,23 +43,18 @@ def get_project_by_id(ident: int) -> Project:
     return Project.query.get(ident)
 
 
-def get_project_by_dockerhub_name(name: str) -> Project:
-    prefix =app.config["REPO_PREFIX"]
-    if not name.startswith(prefix):
-        raise FailedToFindProjectByDockerhubName(
-            "Name should start with `{}`, got: {}".format(prefix, name))
-    rest = name.replace(prefix, "")
-    parts = rest.split(sep="-", maxsplit=1)
-    if len(parts) < 2:
-        raise FailedToFindProjectByDockerhubName(
-            "Got malformed dockerhub name".format(name))
-    username, title = parts
-    return (
-        Project.query
-        .join(User)
-        .filter(User.username == username)
-        .filter(Project.title == title)
-    ).one()
+# def get_project_by_dockerhub_name(name: str) -> Project:
+#     parts = name.split(sep="-", maxsplit=1)
+#     if len(parts) < 2:
+#         raise FailedToFindProjectByDockerhubName(
+#             "Got malformed dockerhub name".format(name))
+#     username, title = parts
+#     return (
+#         Project.query
+#         .join(User)
+#         .filter(User.username == username)
+#         .filter(Project.title == title)
+#     ).one()
 
 
 def get_running_projects() -> List[Project]:
@@ -103,7 +98,7 @@ def exists_for_user(user: User, title: str) -> bool:
         return False
 
 
-def add_project_from_form(user: User, form: ProjectForm) -> Project:
+def add_project_from_form(user: User, form: Form) -> Project:
     if exists_for_user(user, form.title.data):
         abort(400)
     else:
@@ -114,8 +109,8 @@ def add_project_from_form(user: User, form: ProjectForm) -> Project:
         )
 
 
-def update_project_from_form(project: Project, form: ProjectForm) -> Project:
-    project.source_mode = form.source_mode.data
+def update_project_from_form(project: Project, form: Form) -> Project:
+    # todo: more complex logic after support of more source mode's
     project.local_text = form.local_text.data
     project.git_url = form.git_url.data
     return project

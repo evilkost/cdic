@@ -3,7 +3,6 @@
 import os
 
 DEBUG = True
-REPO_PREFIX = ""
 
 ADMINS = frozenset(['nobody@example.com'])
 SECRET_KEY = 'This string will be replaced with a proper key in production.'

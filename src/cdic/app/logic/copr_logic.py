@@ -5,7 +5,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.query import Query
 
 from ..models import Project, User, LinkedCopr
-from ..forms.project import ProjectForm
 
 
 def check_link_exists(project: Project, username: str, coprname: str) -> bool:

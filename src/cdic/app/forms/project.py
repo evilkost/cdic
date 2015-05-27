@@ -1,24 +1,57 @@
 # coding: utf-8
 
-from flask_wtf import Form, RecaptchaField
-from wtforms import StringField, PasswordField, BooleanField, RadioField, TextAreaField
-from wtforms.validators import DataRequired, EqualTo, Email
+from flask import g
+from flask_wtf import Form
+from wtforms import StringField, RadioField, TextAreaField, ValidationError
+from wtforms.validators import DataRequired, Regexp
 from wtforms.fields.html5 import URLField
 
+from ..logic.project_logic import exists_for_user
 from ..constants import SourceType
+
 
 # todo: custom validation for git_url presence when this mode is selected
 
 
+class ProjectUniqueNameValidator(object):
+
+    def __init__(self, message=None):
+        if not message:
+            message = "You already have project named '{}'."
+        self.message = message
+
+    def __call__(self, form, field):
+        existing = exists_for_user(g.user, field.data)
+        if existing:
+            raise ValidationError(self.message.format(field.data))
+
+
+class ExistingRepoNameValidator(object):
+    # since we use - as delimiter between user name and project title
+    # one could forge a new user so that resulting repo_name would be equal to existing repo
+    # i.e. assume there is a user `foo` with project `bar-xyz`, than attacker creates
+    # account `foo-bar`
+    def __init__(self, message=None):
+        if not message:
+            message = "You title conflicts with existing repo '{}'."
+        self.message = message
+
+
 class ProjectForm(Form):
-
-    title = StringField("Project title", [DataRequired()])
-
-    source_mode = RadioField(SourceType.LOCAL_TEXT,
-                             choices=[(x, x.replace("_", " ").capitalize()) for x in SourceType.get_all_options()],
-                             default=SourceType.LOCAL_TEXT)
-
     local_text = TextAreaField()
 
     git_url = URLField("Git source url")
     dockerfile_path = StringField()
+
+
+class ProjectCreateForm(Form):
+
+    title = StringField("Project title", [
+        DataRequired(),
+        Regexp(r'^[\w|\d|-]+$', message="Title should contains only numbers, letters or `-`"),
+        ProjectUniqueNameValidator()
+    ])
+
+    source_mode = RadioField(SourceType.LOCAL_TEXT,
+                             choices=[(x, x.replace("_", " ").capitalize()) for x in SourceType.get_all_options()],
+                             default=SourceType.LOCAL_TEXT)

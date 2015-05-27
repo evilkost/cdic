@@ -157,7 +157,7 @@ class Project(db.Model):
             return None
         else:
             return "/".join([app.config["GITHUB_URL"], app.config["GITHUB_USER"],
-                             self.repo_name])
+                             str(self.repo_name)])
 
     @property
     def github_push_url(self) -> str:
@@ -179,7 +179,7 @@ class Project(db.Model):
                 app.config["DOCKERREGISTRY_URL"],
                 "u",
                 app.config["DOCKERHUB_USERNAME"],
-                self.repo_name
+                str(self.repo_name)
             ])
 
     @property

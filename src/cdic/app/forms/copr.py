@@ -1,9 +1,7 @@
 # coding: utf-8
 
-from flask_wtf import Form, RecaptchaField
-from wtforms import StringField, PasswordField, BooleanField, RadioField, TextAreaField
-from wtforms.validators import DataRequired, EqualTo, Email
-from wtforms.fields.html5 import URLField
+from flask_wtf import Form
+from wtforms import StringField
 
 
 class CoprSearchLinkForm(Form):
