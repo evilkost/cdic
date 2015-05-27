@@ -2,47 +2,53 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% import "bootstrap/utils.html" as utils %}
 
+{% block styles %}
+{{super()}}
+<link rel="stylesheet"
+      href="/static/dopr.css">
+{% endblock %}
+
 {% block title %}DOPR - inject copr into your images!{% endblock %}
 
 {% block navbar %}
   <!-- Fixed navbar -->
-  <nav class="navbar navbar-inverse navbar-fixed-top">
+
+  <nav class="navbar navbar-default navbar-static-top" id="main-bar">
     <div class="container">
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="/">DOPR</a>
+      <div class="col-md-8 col-sm-7 col-xs-6">
+        <a href="/">
+          <img src="/static/dopr-logo.png" alt="dopr" id="logo">
+        </a>
       </div>
-      <div id="navbar" class="navbar-collapse collapse">
-        <!--<ul class="nav navbar-nav">-->
-          <!--<li class="{% if home_btn_active %} active {% endif %}"><a href="/">Home</a></li>-->
-          <!--&lt;!&ndash;<li><a href="/projects">DProjects</a></li>&ndash;&gt;-->
-        <!--</ul>-->
-        <ul class="nav navbar-nav navbar-right">
-          {% if g.user %}
-            <li class="{% if my_prj_btn_active %} active {% endif %}">
-              <a href="{{ url_for('project.list_by_user',username=g.user.username) }}">
-              My ({{ g.user.username }}) projects
-            </a> </li>
-            <li><a href="/auth/logout">Logout</a></li>
-          {% else %}
-            <li><a href="/auth/login">Login</a></li>
-          {% endif %}
-        </ul>
-      </div><!--/.nav-collapse -->
+      <div class="col-md-4 col-sm-5 col-xs-6">
+        <div class="row">
+          <span id="login-menu" class="pull-right">
+            {% if g.user %}
+                <a href="{{ url_for('project.list_by_user',username=g.user.username) }}">
+                  ({{ g.user.username }}) - my projects
+                </a> | <a href="/auth/logout">log out</a>
+            {% else %}
+              <a href="/auth/login">log in</a> |
+              <a href="https://admin.fedoraproject.org/accounts/user/new"> sign up </a>
+            {% endif %}
+          </span>
+        </div>
+        <div class="row">
+          <!--
+          <form role="search" action="">
+            <div class="input-group menu-search">
+              <input name="search" type="text" class="form-control" placeholder="Search projects" value="">
+              <span class="input-group-btn">
+                <button type="submit" class="btn btn-default">
+                <span class="glyphicon glyphicon-search"></span>
+                </button>
+              </span>
+            </div>
+          </form>  -->
+        </div>
+      </div>
     </div>
   </nav>
-
-  <!-- looks like some bug in flask-bootstrap style, adding additional space under navbar -->
-  <div>
-    <br />
-    <br />
-    <br />
-  </div>
 
 {% endblock %}
 
