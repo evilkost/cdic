@@ -2,7 +2,6 @@
 #FROM fedora/systemd-systemd:latest
 FROM vpavlin/fedora:systemd
 
-
 RUN yum install -y dnf && \
     dnf install -y \
         python3 \
@@ -20,19 +19,16 @@ RUN dnf copr enable msuchy/copr -y && \
     mkdir -p /opt/casper && cd /opt/casper && git clone git://github.com/n1k0/casperjs.git && \
     cd casperjs && ln -sf `pwd`/bin/casperjs /usr/bin/casperjs && chmod +x /usr/bin/casperjs
 
+EXPOSE 8000
+RUN adduser cdic && chown -Rf cdic:cdic /opt/cdic
+
+
+COPY /tmp/cache_buster /tmp/cache_buster
+
 RUN mkdir -p /opt/cdic && cd /opt/ && git clone https://github.com/evilkost/cdic.git && \
     cd /opt/cdic && pip3 install -r requirements.txt
 
-#RUN mkdir -p /opt/cdic/src
-#COPY requirements.txt /opt/cdic/
-#COPY src /opt/cdic/src
-#RUN cd /opt/cdic && pip3 install -r requirements.txt
-
 COPY _docker/systemd /opt/cdic/_docker/systemd
-EXPOSE 8000
-
-
-RUN adduser cdic && chown -Rf cdic:cdic /opt/cdic
 
 RUN cp /opt/cdic/_docker/systemd/* /etc/systemd/system/ \
     && cp /opt/cdic/_docker/tmpfiles.d/* /etc/tmpfiles.d/ \
