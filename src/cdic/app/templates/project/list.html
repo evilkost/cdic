@@ -34,12 +34,12 @@
         <span class="pull-right">
           <div class="btn-group" role="group" aria-label="...">
             {% if g.user == project.user%}
-              <a href="{{ url_for('project.edit', project_id=project.id)}}"
+              <a href="{{ url_for('project.edit', username=project.user.username, title=project.title)}}"
                  class="btn btn-default">Edit</a>
 
               {% if project.is_runnable %}
               <a class="btn btn-warning"
-                 href="{{ url_for('project.start_build', project_id=project.id)}}">
+                 href="{{ url_for('project.start_build', username=project.user.username, title=project.title)}}">
                 Run build
               </a>
               {% endif %}

@@ -42,21 +42,6 @@ def get_project_by_id(ident: int) -> Project:
     """
     return Project.query.get(ident)
 
-
-# def get_project_by_dockerhub_name(name: str) -> Project:
-#     parts = name.split(sep="-", maxsplit=1)
-#     if len(parts) < 2:
-#         raise FailedToFindProjectByDockerhubName(
-#             "Got malformed dockerhub name".format(name))
-#     username, title = parts
-#     return (
-#         Project.query
-#         .join(User)
-#         .filter(User.username == username)
-#         .filter(Project.title == title)
-#     ).one()
-
-
 def get_running_projects() -> List[Project]:
     return Project.query.filter(Project.build_is_running == true()).all()
 

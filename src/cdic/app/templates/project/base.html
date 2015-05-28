@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+
+<!-- for Dockerfile highlighting -->
+{% block styles %}
+  {{super()}}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/styles/default.min.css">
+{% endblock %}
+
+{% block scripts %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/languages/dockerfile.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  {{super()}}
+{% endblock %}
+
+
+
+
+{% block inner_content %}
+
+  <ol class="breadcrumb">
+    <li><a href="/">Home</a></li>
+    <li>
+      <a href="{{ url_for('project.list_by_user',username=project.user.username) }}">
+        {{ project.user.username }}
+      </a>
+    </li>
+    <li><a href="{{ url_for('project.details', username=project.user.username, title=project.title) }}">
+      {{ project.title }}
+    </a></li>
+    {% block last_breadcrumb %}{% endblock %}
+
+  </ol>
+
+  <h1 class="text-left">Project: {{ project.title }}</h1>
+  <ul class="nav nav-pills">
+    <li role="presentation" class="{% if project_info_page %} active {% endif %}">
+      <a class="btn btn-default"
+         href="{{ url_for('project.details', username=project.user.username, title=project.title) }}">
+      Info</a>
+    </li>
+    {% if g.user == project.user %}
+    <li role="presentation" class="{% if project_edit_page %} active {% endif %}">
+      <a class="btn btn-default" href="{{ url_for('project.edit', username=project.user.username, title=project.title)}}">
+        Edit
+      </a>
+    </li>
+    <li role="presentation" class="{% if project_link_page %} active {% endif %}">
+      <a class="btn btn-default"
+         href="{{ url_for('project.search_and_link',
+                          username=project.user.username, title=project.title)}}">
+        Link coprs
+      </a>
+    </li>
+    <a class="btn btn-danger pull-right"
+       href="{{ url_for('project.start_build', username=project.user.username, title=project.title)}}">Run build</a>
+    {% endif %}
+  </ul>
+
+  {% block project_inner_content %}{% endblock %}
+
+
+{% endblock %}
