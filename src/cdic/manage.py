@@ -92,9 +92,9 @@ class RunAsyncTasks(Command):
 
         r.add_periodic_task("Reschedule build task", ctx_wrapper(reschedule_stall_builds), 200)
         r.add_periodic_task("Schedule dh status update task",
-                            ctx_wrapper(schedule_dh_status_updates), 600)
+                            ctx_wrapper(schedule_dh_status_updates), 200)
         r.add_periodic_task("Reschedule failed dockerhub creation task",
-                            ctx_wrapper(reschedule_dockerhub_creation), 600)
+                            ctx_wrapper(reschedule_dockerhub_creation), 120)
 
         all_async_tasks = [
             run_build_task,

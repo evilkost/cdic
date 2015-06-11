@@ -42,7 +42,7 @@ def init_local_repo(project: Project):
         try:
             repo = gs.init_local(project.user.username, project.title)
         except AnotherRepoExists:
-            pass
+            return
 
         gs.add_remote(repo, project.github_push_url)
         open(os.path.join(repo.working_dir, "Dockerfile"), "wb").close()  # touch Dockerfile
