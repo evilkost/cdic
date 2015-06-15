@@ -191,6 +191,10 @@ class Project(db.Model):
         return self.history_events.order_by(ProjectEvent.created_on.desc())
 
 
+def get_copr_url(username: str, coprname: str) -> str:
+    return "/".join([app.config["COPR_BASE_URL"], "coprs", username, coprname])
+
+
 class LinkedCopr(db.Model):
 
     __tablename__ = "linked_copr"
@@ -213,5 +217,4 @@ class LinkedCopr(db.Model):
 
     @property
     def copr_url(self) -> str:
-        return "/".join([app.config["COPR_BASE_URL"], "coprs",
-                        self.username, self.coprname])
+        return get_copr_url(self.username, self.coprname)
