@@ -101,7 +101,7 @@ class Project(db.Model):
 
     dockerhub_build_status = db.Column(db.String(32))
     # here we use server time
-    dockerhub_build_status_updated_on_local_time = db.Column(db.String(32))
+    dockerhub_build_status_updated_on_local_time = db.Column(db.DateTime)
     # for the next two fields we use time stamps parsed from DockerHub pages
     dockerhub_latest_build_started_on = db.Column(db.DateTime)
     dockerhub_latest_build_updated_on = db.Column(db.DateTime)
