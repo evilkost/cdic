@@ -146,7 +146,7 @@ class Project(db.Model):
             return False
 
         if self.dockerhub_build_status.lower() in ["finished", "error"] and \
-                self.local_repo_pushed_on < self.dockerhub_latest_build_updated_on:
+                self.local_repo_pushed_on < self.dockerhub_build_status_updated_on_local_time:
             return True
         else:
             return False
@@ -198,13 +198,10 @@ class Project(db.Model):
     def show_build_in_progress(self) -> bool:
         if not self.build_started_on:
             return False
-        if not self.local_repo_pushed_on or not self.dockerhub_latest_build_updated_on:
+        if not self.local_repo_pushed_on or not self.dockerhub_build_status_updated_on_local_time:
             return True
 
-        if self.build_started_on > self.local_repo_pushed_on:
-            return True
-
-        if self.build_started_on > self.dockerhub_latest_build_updated_on:
+        if self.build_started_on > self.dockerhub_build_status_updated_on_local_time:
             return True
 
         return self.is_dh_build_finished

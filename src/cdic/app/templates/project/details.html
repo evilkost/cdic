@@ -74,8 +74,10 @@
 
             <dd>
               <span class="label
-                {% if 'Finished' in project.dockerhub_build_status %}
+                {% if 'finished' in project.dockerhub_build_status|lower %}
                   label-success
+                {% elif 'error' in project.dockerhub_build_status|lower %}
+                  label-error
                 {% else %}
                   label-info
                 {% endif %}
