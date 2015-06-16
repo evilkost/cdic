@@ -194,9 +194,18 @@ class Project(db.Model):
 
     @property
     def show_build_in_progress(self) -> bool:
-        if self.build_started_on and not self.is_dh_build_finished:
+        if not self.build_started_on:
+            return False
+        if not self.local_repo_pushed_on or not self.dockerhub_latest_build_updated_on:
             return True
-        return False
+
+        if self.build_started_on > self.local_repo_pushed_on:
+            return True
+
+        if self.build_started_on > self.dockerhub_latest_build_updated_on:
+            return True
+
+        return self.is_dh_build_finished
 
 
 def get_copr_url(username: str, coprname: str) -> str:
