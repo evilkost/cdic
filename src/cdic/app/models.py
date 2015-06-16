@@ -89,6 +89,8 @@ class Project(db.Model):
     created_on = db.Column(db.DateTime, default=db.func.now())
     updated_on = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
+    # this variable define only "local" build process, after the user click on "Run build" and until
+    # we push changes to github or create docker hub (for the first build)
     build_is_running = db.Column(db.Boolean, default=False)
     local_repo_exists = db.Column(db.Boolean, default=False)
     patched_dockerfile = db.Column(db.Text)
@@ -141,7 +143,7 @@ class Project(db.Model):
                 self.dockerhub_latest_build_updated_on is None:
             return False
 
-        if "finished" in self.dockerhub_build_status.lower() and \
+        if self.dockerhub_build_status.lower() in ["finished", "error"] and \
                 self.local_repo_pushed_on < self.dockerhub_latest_build_updated_on:
             return True
         else:
@@ -189,6 +191,12 @@ class Project(db.Model):
     @property
     def recent_events(self) -> Iterable[ProjectEvent]:
         return self.history_events.order_by(ProjectEvent.created_on.desc())
+
+    @property
+    def show_build_in_progress(self) -> bool:
+        if self.build_started_on and not self.is_dh_build_finished:
+            return True
+        return False
 
 
 def get_copr_url(username: str, coprname: str) -> str:
