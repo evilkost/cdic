@@ -142,7 +142,7 @@ class Project(db.Model):
         if not self.dockerhub_repo_exists or \
                 self.local_repo_pushed_on is None or \
                 self.dockerhub_build_status is None or \
-                self.dockerhub_latest_build_updated_on is None:
+                self.dockerhub_build_status_updated_on_local_time is None:
             return False
 
         if self.dockerhub_build_status.lower() in ["finished", "error"] and \
