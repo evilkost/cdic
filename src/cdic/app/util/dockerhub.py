@@ -1,4 +1,5 @@
 # coding: utf-8
+import datetime
 import json
 import random
 import os
@@ -9,7 +10,10 @@ import logging
 
 from urllib.parse import urljoin
 
+from backports.typing import List
+
 from dateutil.parser import parse as dt_parse
+import pytz
 import requests
 
 from .. import app
@@ -20,7 +24,12 @@ log = logging.getLogger(__name__)
 logging.getLogger("requests").setLevel(logging.WARN)
 
 
-def get_builds_history(repo_name: str) -> "List[dict]":
+def dt_parse_to_utc_without_tz(val: str) -> datetime.datetime:
+    tz = pytz.timezone("UTC")
+    return dt_parse(val).astimezone(tz).replace(tzinfo=None)
+
+
+def get_builds_history(repo_name: str) -> List[dict]:
     """
     :param repo_name:
     :raises DockerHubQueryError: If failed to execute query script or got mall formed result

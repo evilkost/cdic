@@ -1,5 +1,7 @@
 # coding: utf-8
+import datetime
 import logging
+import pytz
 
 
 def setup_logging(log_file_path=None):
@@ -11,3 +13,10 @@ def setup_logging(log_file_path=None):
         level=logging.DEBUG
     )
 
+def utc_now():
+    """
+    :return datetime.datetime: Current utc datetime with specified timezone
+    """
+    u = datetime.utcnow()
+    u = u.replace(tzinfo=pytz.utc)
+    return u
