@@ -1,4 +1,5 @@
 # coding: utf-8
+import datetime
 
 import logging
 
@@ -57,6 +58,7 @@ def update_dockerhub_build_status(project_id: int):
         project.dockerhub_build_status = new_status
         project.dockerhub_latest_build_started_on = latest_build["created_on"]
         project.dockerhub_latest_build_updated_on = latest_build["updated_on"]
+        project.dockerhub_build_status_updated_on_local_time = datetime.datetime.now()
         db.session.add(project)
         db.session.commit()
     else:
