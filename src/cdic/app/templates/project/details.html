@@ -77,7 +77,7 @@
                 {% if 'finished' in project.dockerhub_build_status|lower %}
                   label-success
                 {% elif 'error' in project.dockerhub_build_status|lower %}
-                  label-error
+                  label-danger
                 {% else %}
                   label-info
                 {% endif %}
@@ -90,7 +90,7 @@
 
             <dt>Dockerhub updated</dt>
             <dd>
-              {{ project.dockerhub_build_status_updated_on_local_time }}
+              {{ project.dockerhub_latest_build_updated_on }}
             </dd>
             {% endif %}
 
@@ -102,7 +102,7 @@
             <dd>{{ project.show_build_in_progress }}</dd>
 
             <dt>DH updated local time</dt>
-            <dd>[{{ dockerhub_build_status_updated_on_local_time }}]</dd>
+            <dd>[{{ project.dockerhub_build_status_updated_on_local_time }}]</dd>
             <!--<hr />-->
             <!--{{ project.local_repo_pushed_on }}-->
             <!--{% for k, v in project.__dict__.items() %}-->
