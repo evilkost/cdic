@@ -48,6 +48,12 @@ def update_dockerhub_build_status(project_id: int):
         log.debug("Builds for project {}: {}".format(project.repo_name, builds))
         latest_build = builds[0]
         new_status = latest_build["status"]
+
+        if project.dockerhub_latest_build_updated_on and \
+                project.dockerhub_latest_build_updated_on >= latest_build["updated_on"]:
+            log.debug("No new build info for project: {}".format(project.repo_name))
+            return
+
         if project.dockerhub_build_status != "Finished" and new_status in ["Finished", "Error"]:
             event = create_project_event(
                 project,
