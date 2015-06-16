@@ -204,7 +204,7 @@ class Project(db.Model):
         if self.build_started_on > self.dockerhub_build_status_updated_on_local_time:
             return True
 
-        return self.is_dh_build_finished
+        return not self.is_dh_build_finished
 
 
 def get_copr_url(username: str, coprname: str) -> str:
