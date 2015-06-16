@@ -59,8 +59,8 @@ def get_builds_history(repo_name: str) -> List[dict]:
         return dict(
             build_id=build_dict["build_id"],
             status=build_dict["status"],
-            created_on=dt_parse(build_dict["created_on"]),
-            updated_on=dt_parse(build_dict["updated_on"])
+            created_on=dt_parse_to_utc_without_tz(build_dict["created_on"]),
+            updated_on=dt_parse_to_utc_without_tz(build_dict["updated_on"])
         )
     try:
         return [fix_date(b) for b in json.loads(std_out)]
