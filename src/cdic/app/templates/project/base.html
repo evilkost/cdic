@@ -57,27 +57,7 @@
        href="{{ url_for('project.start_build', username=project.user.username, title=project.title)}}">Run build</a>
     {% endif %}
   </ul>
-  {% if project.show_build_in_progress %}
-  <div class="row">
-    <div class="col-xs-12">
-      <h4 class="text-center">
-        Build is running,
-        <a href="{{ url_for(
-                'project.details', username=project.user.username, title=project.title) }}"
-           target="_self">
-          refresh
-        </a>
-        page to get latest state
-      </h4>
-      <div class="progress">
-        <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
-             aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
 
-        </div>
-      </div>
-    </div>
-  </div>
-  {% endif %}
   {% block project_inner_content %}{% endblock %}
 
 
