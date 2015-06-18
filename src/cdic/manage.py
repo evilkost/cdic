@@ -13,7 +13,7 @@ from cdic.util import setup_logging
 
 from app.logic.build_logic import run_build_task
 from app.logic.dockerhub_logic import create_dockerhub_task, update_dockerhub_build_status_task, \
-    schedule_dh_status_updates, reschedule_dockerhub_creation
+    schedule_dh_status_updates, reschedule_dockerhub_creation, reschedule_dockerhub_start_build
 from app import app, db
 from app.logic.build_logic import reschedule_stall_builds
 from app.async.runner import Runner
@@ -95,6 +95,8 @@ class RunAsyncTasks(Command):
                             ctx_wrapper(schedule_dh_status_updates), 200)
         r.add_periodic_task("Reschedule failed dockerhub creation task",
                             ctx_wrapper(reschedule_dockerhub_creation), 120)
+        r.add_periodic_task("Reschedule dockerhub start build task",
+                            ctx_wrapper(reschedule_dockerhub_start_build), 40)
 
         all_async_tasks = [
             run_build_task,

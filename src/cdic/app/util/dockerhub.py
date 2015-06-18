@@ -68,6 +68,33 @@ def get_builds_history(repo_name: str) -> List[dict]:
         raise DockerHubQueryError(msg="Failed to parse casperjs respons: `{}` after cmd: `{}`"
                                   .format(std_out, " ".join(cmd)))
 
+def run_dockerhub_build(repo_name):
+    """
+    Run existing automated build
+    :raises DockerHubQueryError: when failed to run build
+    """
+
+    # todo add project.dh_run_build_sent_on_local_time
+    log.info("Sending request for the new build: {}".format(repo_name))
+    # ensure that credentials file for casperjs exists,
+    # todo: generalize functions
+    credentionals, script_path = prepare_casperjs_script("run_build.js")
+
+    cmd = [
+        "/usr/bin/casperjs",
+        "--repo_name={}".format(pipes.quote(repo_name)),
+        "--credentials={}".format(pipes.quote(credentionals)),
+        script_path
+    ]
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    std_out, std_err = map(lambda x: x.decode("utf-8"), p.communicate())
+
+    if p.returncode != 0:
+        raise DockerHubQueryError(msg="Casperjs command failed.: {}".format(" ".join(cmd)),
+                                  return_code=p.returncode, stdout=std_out, stderr=std_err)
+    else:
+        log.debug("STDOUT: \n" + std_out)
+
 
 def create_dockerhub_automated_build_repo(repo_name):
     """
@@ -80,18 +107,7 @@ def create_dockerhub_automated_build_repo(repo_name):
     """
     log.info("Creating new automated build: {}".format(repo_name))
     # ensure that credentials file for casperjs exists
-    credentionals = os.path.join(app.config["VAR_ROOT"], "dockerhub_credentionals.json")
-    if not os.path.exists(credentionals):
-        with open(credentionals, "w") as handle:
-            handle.write(json.dumps({
-                "username": app.config["DOCKERHUB_USERNAME"],
-                "password": app.config["DOCKERHUB_PASSWORD"],
-                "github_username": app.config["GITHUB_USER"],
-            }))
-
-    src_dir = os.path.dirname(os.path.abspath(__file__))
-    script_path = os.path.abspath(os.path.join(
-        src_dir,  "../../../phantom/dockerhub_create.js"))
+    credentionals, script_path = prepare_casperjs_script("dockerhub_create.js")
 
     cmd = [
         "/usr/bin/casperjs",
@@ -120,3 +136,18 @@ def create_dockerhub_automated_build_repo(repo_name):
         raise DockerHubCreateRepoError(msg="Repo doesn't exists at `{}`".format(url))
 
     log.info("Finished creation of new dockerhub repo: {}".format(repo_name))
+
+
+def prepare_casperjs_script(script_name):
+    credentionals = os.path.join(app.config["VAR_ROOT"], "dockerhub_credentionals.json")
+    if not os.path.exists(credentionals):
+        with open(credentionals, "w") as handle:
+            handle.write(json.dumps({
+                "username": app.config["DOCKERHUB_USERNAME"],
+                "password": app.config["DOCKERHUB_PASSWORD"],
+                "github_username": app.config["GITHUB_USER"],
+            }))
+    src_dir = os.path.dirname(os.path.abspath(__file__))
+    script_path = os.path.abspath(os.path.join(
+        src_dir, "../../../phantom/{}".format(script_name)))
+    return credentionals, script_path

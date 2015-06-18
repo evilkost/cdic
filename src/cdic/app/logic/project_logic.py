@@ -9,7 +9,7 @@ from flask import abort
 from flask_wtf import Form
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.query import Query
-from sqlalchemy.sql import true, or_, false
+from sqlalchemy.sql import true, or_, false, and_
 
 from .. import app
 from ..constants import SourceType
@@ -60,6 +60,17 @@ def get_projects_to_update_dh_status() -> List[Project]:
             .filter(Project.local_repo_pushed_on.isnot(None)).all())
         if not project.is_dh_build_finished
     ]
+
+def get_projects_to_start_dh_build() -> List[Project]:
+    return (
+        Project.query
+        .filter(Project.dockerhub_repo_exists == true())
+        .filter(or_(
+            Project.dh_start_requested_on > Project.dh_start_done_on,
+            and_(Project.dh_start_requested_on.isnot(None), Project.dh_start_done_on.is_(None)))
+        )
+    ).all()
+
 
 def get_project_waiting_for_push() -> List[Project]:
     return (

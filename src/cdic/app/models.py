@@ -105,6 +105,9 @@ class Project(db.Model):
     # for the next two fields we use time stamps parsed from DockerHub pages
     dockerhub_latest_build_started_on = db.Column(db.DateTime)
     dockerhub_latest_build_updated_on = db.Column(db.DateTime)
+    # to click dockerhub "start build", using local time
+    dh_start_requested_on = db.Column(db.DateTime)
+    dh_start_done_on = db.Column(db.DateTime)
 
     source_mode = db.Column(db.String(40), default=SourceType.LOCAL_TEXT,
                             server_default=SourceType.LOCAL_TEXT)
@@ -205,6 +208,14 @@ class Project(db.Model):
             return True
 
         return not self.is_dh_build_finished
+
+    @property
+    def should_start_dh_build(self) -> bool:
+        if self.dh_start_requested_on:
+            if not self.dh_start_done_on or \
+                    self.dh_start_done_on < self.dh_start_requested_on:
+                return True
+        return False
 
 
 def get_copr_url(username: str, coprname: str) -> str:
