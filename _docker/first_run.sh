@@ -9,7 +9,7 @@ cd /opt/cdic/src
 
 if [ -e /home/cdic/init_done ]; then
     echo "db schema upgrade "
-    alembic upgrade head
+    PYTHONPATH=cdic:$PYTHONPATH alembic upgrade head
 else
     echo "initiating db"
     PYTHONPATH=.:$PYTHONPATH /usr/bin/python3 cdic/manage.py create_db -f alembic.ini
