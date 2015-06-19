@@ -36,16 +36,13 @@ def run_build(project_id):
 
     push_build(project)
 
-    project.dh_start_requested_on = datetime.datetime.utcnow()
-    if project.dockerhub_repo_exists:
-        pe = create_project_event(project, "Build request passed to Dockerhub, wait for result")
-        db.session.add(pe)
-    else:
+    if not project.dockerhub_repo_exists:
         schedule_task(create_dockerhub_task, project.id)
         pe = create_project_event(project, "Dockerhub automated build repo is scheduled for creation, "
                                            "please wait")
         db.session.add(pe)
 
+    project.dh_start_requested_on = datetime.datetime.utcnow()
     project.build_is_running = False
     db.session.add(project)
     db.session.commit()
