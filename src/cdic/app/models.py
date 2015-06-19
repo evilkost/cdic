@@ -204,6 +204,8 @@ class Project(db.Model):
     def show_build_in_progress(self) -> bool:
         if not self.build_started_on:
             return False
+        if self.delete_requested_on is not None:
+            return False
         if not self.local_repo_pushed_on or not self.dockerhub_build_status_updated_on_local_time:
             return True
 

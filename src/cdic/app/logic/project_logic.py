@@ -3,6 +3,7 @@ import datetime
 from io import StringIO
 import os
 
+import logging
 from backports.typing import Iterable, List
 
 from flask import abort
@@ -11,12 +12,17 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.query import Query
 from sqlalchemy.sql import true, or_, false, and_
 
-from .. import app
+from .. import app, db, git_store
+from app.async.pusher import PREFIX, ctx_wrapper
+from app.async.task import OnDemandTask
+from app.util.dockerhub import delete_dockerhub
+from app.util.github import GhClient
 from ..constants import SourceType
-from ..exceptions import PatchDockerfileException, FailedToFindProjectByDockerhubName
+from ..exceptions import PatchDockerfileException, FailedToFindProjectByDockerhubName, DockerHubQueryError
 from ..models import Project, User
 # from ..forms.project import ProjectForm
 
+log = logging.getLogger(__name__)
 
 def get_all_projects_query() -> Query:
     return Project.query.order_by(Project.created_on.desc())
@@ -50,6 +56,7 @@ def get_projects_to_create_dh() -> List[Project]:
         Project.query
         .filter(Project.github_repo_exists == true())
         .filter(Project.dockerhub_repo_exists == false())
+        .filter(Project.delete_requested_on.is_(None))
     ).all()
 
 def get_projects_to_update_dh_status() -> List[Project]:
@@ -57,6 +64,7 @@ def get_projects_to_update_dh_status() -> List[Project]:
         project for project in
         (Project.query
             .filter(Project.dockerhub_repo_exists == true())
+            .filter(Project.delete_requested_on.is_(None))
             .filter(Project.local_repo_pushed_on.isnot(None)).all())
         if not project.is_dh_build_finished
     ]
@@ -65,6 +73,7 @@ def get_projects_to_start_dh_build() -> List[Project]:
     return (
         Project.query
         .filter(Project.dockerhub_repo_exists == true())
+        .filter(Project.delete_requested_on.is_(None))
         .filter(or_(
             Project.dh_start_requested_on > Project.dh_start_done_on,
             and_(Project.dh_start_requested_on.isnot(None), Project.dh_start_done_on.is_(None)))
@@ -78,6 +87,7 @@ def get_project_waiting_for_push() -> List[Project]:
         .filter(Project.build_is_running == true())  # just to be sure,
         # we write content to the file only after the  user press `Run Build`
         .filter(Project.github_repo_exists)
+        .filter(Project.delete_requested_on.is_(None))
         .filter(Project.local_repo_changed_on.isnot(None))
         .filter(or_(
             Project.local_repo_pushed_on.is_(None),
@@ -180,3 +190,53 @@ def update_patched_dockerfile(project: Project):
 
 
 
+def delete_project(project: Project):
+    # 1. delete dockerhub repo, on success set dockerhub_repo_exist to None
+    # 2. delete github, on success set dockerhub_repo_exist to None
+    # 3. delete local git
+    # 4. clean db
+
+    log.info("Deleting project: {}".format(project.repo_name))
+    if project.dockerhub_repo_exists:
+        try:
+            delete_dockerhub(project.repo_name)
+        except DockerHubQueryError:
+            log.exception("Failed to delete dockerhub: {}".format(project.repo_name))
+            return
+        project.dockerhub_repo_exists = False
+        db.session.add(project)
+        db.session.commit()
+
+    if project.github_repo_exists:
+        try:
+            GhClient().delete_repo(project.repo_name)
+        except Exception:
+            log.exception("Failed to delete github repo: {}".format(project.repo_name))
+
+        project.github_repo_exists = False
+        db.session.add(project)
+        db.session.commit()
+
+    if project.local_repo_exists:
+        git_store.clean(project.user.username, project.title)
+
+        project.local_repo_exists = False
+        db.session.add(project)
+        db.session.commit()
+
+    db.session.delete(project)
+    db.session.commit()
+    log.info("Delete project: {} done".format(project.repo_name))
+
+
+
+def process_pending_deletes(*args, **kwargs):
+    to_do = Project.query.filter(Project.delete_requested_on.isnot(None)).all()
+    if not to_do:
+        log.debug("No pending deletes")
+        return
+    for project in to_do:
+        try:
+            delete_project(project)
+        except Exception:
+            log.exception("Unhandled exception during project deletion")

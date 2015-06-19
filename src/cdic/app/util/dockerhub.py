@@ -138,6 +138,38 @@ def create_dockerhub_automated_build_repo(repo_name):
     log.info("Finished creation of new dockerhub repo: {}".format(repo_name))
 
 
+def delete_dockerhub(repo_name):
+    log.info("Deleting repo: {}".format(repo_name))
+    credentionals, script_path = prepare_casperjs_script("dockerhub_delete.js")
+
+    cmd = [
+        "/usr/bin/casperjs",
+        "--repo_name={}".format(pipes.quote(repo_name)),
+        "--credentials={}".format(pipes.quote(credentionals)),
+        script_path
+    ]
+    log.debug("Executing:\n{}".format(" ".join(cmd)))
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    std_out, std_err = map(lambda x: x.decode("utf-8"), p.communicate())
+
+    if p.returncode != 0:
+        log.error("Casperjs command failed.: {}\n return code: {}, stdout: {}, stderr: {}"
+                  .format(" ".join(cmd), p.returncode, std_out, std_err))
+    else:
+        log.debug("STDOUT: \n" + std_out)
+
+    # need to ensure that dh build actually vanished
+    url = 'https://registry.hub.docker.com/u/' + app.config["DOCKERHUB_USERNAME"] + '/' + repo_name
+    log.debug("check that repo was vanished from: {}".format(url))
+    response = requests.get(url)
+    log.info(response)
+    if response.status_code == 200:
+        raise DockerHubQueryError(msg="Repo still exists at `{}`".format(url))
+
+    log.info("Finished deletion of dockerhub repo: {}".format(repo_name))
+
+
+
 def prepare_casperjs_script(script_name):
     credentionals = os.path.join(app.config["VAR_ROOT"], "dockerhub_credentionals.json")
     if not os.path.exists(credentionals):

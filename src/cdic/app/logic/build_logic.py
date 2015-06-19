@@ -54,7 +54,7 @@ def run_build(project_id):
 def create_single_github_repo(prj: Project, *args, **kwargs):
     repo_name = prj.repo_name
     log.info("Creating repo: {}".format(repo_name))
-    client = GhClient(app.config)
+    client = GhClient()
     client.create_repo(repo_name)
     set_github_repo_created(prj)
 

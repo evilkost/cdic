@@ -7,7 +7,7 @@ import logging
 
 import flask
 from flask_script import Manager, Command, Option, Group
-
+from app.logic.project_logic import process_pending_deletes
 
 from cdic.util import setup_logging
 
@@ -85,9 +85,9 @@ class RunAsyncTasks(Command):
     def run(self):
         setup_logging(app.config["ASYNC_LOG"])
 
-        logging.getLogger("app.util.dockerhub").setLevel(logging.INFO)
+        # logging.getLogger("app.util.dockerhub").setLevel(logging.INFO)
         logging.getLogger("app.async.runner").setLevel(logging.INFO)
-        logging.getLogger("app.logic.build_logic").setLevel(logging.INFO)
+        # logging.getLogger("app.logic.build_logic").setLevel(logging.INFO)
 
         r = Runner(app)
 
@@ -98,6 +98,8 @@ class RunAsyncTasks(Command):
                             ctx_wrapper(reschedule_dockerhub_creation), 120)
         r.add_periodic_task("Reschedule dockerhub start build task",
                             ctx_wrapper(reschedule_dockerhub_start_build), 40)
+        r.add_periodic_task("Periodically process delete project requests",
+                            ctx_wrapper(process_pending_deletes), 40)
 
         all_async_tasks = [
             run_build_task,

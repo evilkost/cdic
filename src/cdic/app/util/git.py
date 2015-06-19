@@ -51,7 +51,7 @@ class GitStore(object):
     def clean(self, username, projectname):
         repo = self.repo_path(username, projectname)
         log.info("Going to delete: {}".format(repo))
-        shutil.rmtree(repo)
+        shutil.rmtree(repo, ignore_errors=True)
 
     def init_local(self, username, projectname) -> Repo:
         repo = self.repo_path(username, projectname)

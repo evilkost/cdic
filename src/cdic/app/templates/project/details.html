@@ -90,7 +90,7 @@
             <!--<dt>Local repo</dt>-->
             <!--<dd> {{ project.local_repo_exists }}</dd>-->
 
-            {% if project.dockerhub_build_status %}
+            {% if project.dockerhub_build_status and project.dockerhub_repo_exists %}
             <dt>Dockerhub status</dt>
 
             <dd>
