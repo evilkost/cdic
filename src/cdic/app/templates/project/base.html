@@ -38,11 +38,14 @@
     <li role="presentation" class="{% if project_info_page %} active {% endif %}">
       <a class="btn btn-default"
          href="{{ url_for('project.details', username=project.user.username, title=project.title) }}">
-      Info</a>
+        <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+        Info
+      </a>
     </li>
     {% if g.user == project.user %}
     <li role="presentation" class="{% if project_edit_page %} active {% endif %}">
       <a class="btn btn-default" href="{{ url_for('project.edit', username=project.user.username, title=project.title)}}">
+        <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
         Edit
       </a>
     </li>
@@ -50,11 +53,15 @@
       <a class="btn btn-default"
          href="{{ url_for('project.search_and_link',
                           username=project.user.username, title=project.title)}}">
+        <span class="glyphicon glyphicon-link" aria-hidden="true"></span>
         Link coprs
       </a>
     </li>
-    <a class="btn btn-danger pull-right"
-       href="{{ url_for('project.start_build', username=project.user.username, title=project.title)}}">Run build</a>
+    <a class="btn btn-warning pull-right"
+       href="{{ url_for('project.start_build', username=project.user.username, title=project.title)}}">
+      <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
+      Run build
+    </a>
     {% endif %}
   </ul>
 
