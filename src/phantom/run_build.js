@@ -27,7 +27,7 @@ casper.start('https://hub.docker.com/account/login/', function() {
 
 var project_page = "https://registry.hub.docker.com/u/" + username + "/" + repo_name + "/"
 casper.thenOpen(project_page, function() {
-    this.click(x("//*[contains(text(),'xStart a Build')]"));
+    this.click(x("//*[contains(text(),'Start a Build')]"));
 });
 
 
