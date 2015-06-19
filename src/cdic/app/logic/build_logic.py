@@ -36,6 +36,7 @@ def run_build(project_id):
 
     push_build(project)
 
+    project.dh_start_requested_on = datetime.datetime.utcnow()
     if project.dockerhub_repo_exists:
         pe = create_project_event(project, "Build request passed to Dockerhub, wait for result")
         db.session.add(pe)

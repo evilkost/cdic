@@ -25,7 +25,6 @@ def create_dockerhub_repo(project_id: int):
     pe = create_project_event(project, "Created dockerhub automated build")
     if project.build_is_running:
         project.build_is_running = False
-        project.dh_start_requested_on = datetime.datetime.utcnow()
 
     db.session.add_all([project, pe])
     db.session.commit()
