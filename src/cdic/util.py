@@ -17,6 +17,6 @@ def utc_now():
     """
     :return datetime.datetime: Current utc datetime with specified timezone
     """
-    u = datetime.utcnow()
+    u = datetime.datetime.utcnow()
     u = u.replace(tzinfo=pytz.utc)
     return u

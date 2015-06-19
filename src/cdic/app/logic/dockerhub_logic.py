@@ -1,12 +1,10 @@
 # coding: utf-8
 import datetime
-
 import logging
 
 from .. import db
 from app.exceptions import DockerHubQueryError
 from ..util.dockerhub import create_dockerhub_automated_build_repo, get_builds_history, run_dockerhub_build
-from ..models import Project
 from ..logic.event_logic import create_project_event
 from ..logic.project_logic import get_project_by_id, get_projects_to_update_dh_status, get_projects_to_create_dh, \
     get_projects_to_start_dh_build
@@ -68,6 +66,7 @@ def update_dockerhub_build_status(project_id: int):
         latest_build = builds[0]
         new_status = latest_build["status"]
 
+        # check if we got any new info
         if project.dockerhub_latest_build_updated_on and \
                 project.dockerhub_latest_build_updated_on >= latest_build["updated_on"]:
             log.debug("No new build info for project: {}".format(project.repo_name))
@@ -83,7 +82,7 @@ def update_dockerhub_build_status(project_id: int):
         project.dockerhub_build_status = new_status
         project.dockerhub_latest_build_started_on = latest_build["created_on"]
         project.dockerhub_latest_build_updated_on = latest_build["updated_on"]
-        project.dockerhub_build_status_updated_on_local_time = datetime.datetime.now()
+        project.dockerhub_build_status_updated_on_local_time = datetime.datetime.utcnow()
         db.session.add(project)
         db.session.commit()
     else:
