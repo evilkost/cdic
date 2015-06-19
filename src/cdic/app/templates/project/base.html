@@ -42,7 +42,7 @@
         Info
       </a>
     </li>
-    {% if g.user == project.user %}
+    {% if g.user == project.user and project.delete_requested_on == None %}
     <li role="presentation" class="{% if project_edit_page %} active {% endif %}">
       <a class="btn btn-default" href="{{ url_for('project.edit', username=project.user.username, title=project.title)}}">
         <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
@@ -57,6 +57,13 @@
         Link coprs
       </a>
     </li>
+    <li role="presentation" class="{% if project_delete_page %} active {% endif %}">
+      <a class="btn btn-default" href="{{ url_for('project.delete', username=project.user.username, title=project.title)}}">
+        <span class="glyphicon glyphicon-erase" aria-hidden="true"></span>
+        Delete
+      </a>
+    </li>
+
     <a class="btn btn-warning pull-right"
        href="{{ url_for('project.start_build', username=project.user.username, title=project.title)}}">
       <span class="glyphicon glyphicon-play" aria-hidden="true"></span>

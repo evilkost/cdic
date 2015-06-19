@@ -44,6 +44,7 @@
       <div class="panel-body">
         <ul class="list-group">
           {% for prj in project_list %}
+            {% if prj.delete_requested_on != None %}
              <li class="list-group-item">
                <h4>
                  <a href="{{ url_for('project.details', username=prj.user.username, title=prj.title) }}">
@@ -64,6 +65,7 @@
                  </span>
                </h4>
              </li>
+            {% endif %}
           {% endfor %}
 
         </ul>

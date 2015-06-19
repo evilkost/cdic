@@ -121,6 +121,9 @@ class Project(db.Model):
     github_repo_exists = db.Column(db.Boolean, default=False)
     dockerhub_repo_exists = db.Column(db.Boolean, default=False)
 
+    # set on delete requests, indicates that project going to be deleted
+    delete_requested_on = db.Column(db.DateTime, index=True)
+
     def is_editable_by(self, user: User) -> bool:
         return self.user.id == user.id
 

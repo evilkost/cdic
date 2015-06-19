@@ -15,4 +15,5 @@ class EventType(object):
 
     PROJECT_EDITED = "project_edited"
     BUILD_REQUESTED = "build_requested"
+    DELETE_REQUESTED = "delete_requested"
 

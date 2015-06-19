@@ -22,6 +22,8 @@ log = logging.getLogger(__name__)
 
 def run_build(project_id):
     project = get_project_by_id(project_id)
+    if project.delete_requested_on is not None:
+        return
 
     update_patched_dockerfile(project)
     build_event = create_project_event(

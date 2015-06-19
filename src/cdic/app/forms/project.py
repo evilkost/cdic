@@ -5,6 +5,7 @@ from flask_wtf import Form
 from wtforms import StringField, RadioField, TextAreaField, ValidationError
 from wtforms.validators import DataRequired, Regexp
 from wtforms.fields.html5 import URLField
+from app.models import Project
 
 from ..logic.project_logic import exists_for_user
 from ..constants import SourceType
@@ -55,3 +56,28 @@ class ProjectCreateForm(Form):
     source_mode = RadioField(SourceType.LOCAL_TEXT,
                              choices=[(x, x.replace("_", " ").capitalize()) for x in SourceType.get_all_options()],
                              default=SourceType.LOCAL_TEXT)
+
+class SameTextValidator(object):
+
+    def __init__(self, message=None, value=None):
+        if not message:
+            message = "Field value should be equal to " + str(value) + " not {}."
+        self.message = message
+        self.value = value
+
+    def __call__(self, form, field):
+        if field.data != self.value:
+            raise ValidationError(self.message.format(field.data))
+
+
+def delete_form_factory(project: Project) -> Form:
+
+    class DeleteProjectForm(Form):
+
+        mb_title = StringField("Please enter project title to confirm your intention", [
+            DataRequired(),
+            SameTextValidator(message="Please repeat project title, `{}` is a wrong one",
+                              value=project.title)
+        ])
+
+    return DeleteProjectForm()
