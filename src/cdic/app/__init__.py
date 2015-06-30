@@ -7,6 +7,7 @@ from flask import Flask, jsonify, render_template, url_for
 import flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
+from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import redirect
 
 from .exceptions import AccessRejected
@@ -49,9 +50,15 @@ def help_urls():
     return jsonify(func_list)
 
 
+@app.errorhandler(NoResultFound)
+def page_not_found(error):
+    flask.flash("requested page not found: {}".format(flask.request.path), "danger")
+    return redirect(url_for("main.index"))
+
 @app.errorhandler(404)
 def page_not_found(error):
-    return render_template('page_not_found.html', error=error), 404
+    flask.flash("requested page not found: {}".format(flask.request.path), "danger")
+    return redirect(url_for("main.index"))
 
 if __name__ == "__main__":
     logging.basicConfig(
