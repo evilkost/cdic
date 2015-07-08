@@ -35,3 +35,14 @@ COPR_BASE_URL = "https://copr.fedoraproject.org"
 MAIN_LOG = "/var/log/cdic/main.log"
 ASYNC_LOG = "/var/log/cdic/async.log"
 
+README_TEMPLATE = """WARNING!
+========
+
+Dockerfile was produced by Fedora service Dopr.
+Final image is produced by automated build facility of Dockerhub.
+
+Author of this image is {project_owner} ([{project_owner_url}]), Fedora doesn't provide any guaranties
+about safety or stability of the resulting image. Use on your own risk!
+"""
+
+FAS_USER_URL_TEMPLATE = "https://admin.fedoraproject.org/accounts/user/view/{}"

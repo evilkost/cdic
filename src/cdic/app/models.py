@@ -44,6 +44,9 @@ class User(db.Model):
         """
         return self.username
 
+    @property
+    def fas_url(self) -> str:
+        return app.config["FAS_USER_URL_TEMPLATE"].format(self.username)
     # @property
     # def gravatar_url(self):
     #     """
@@ -131,6 +134,13 @@ class Project(db.Model):
         if not self.is_editable_by(user):
             raise AccessRejected("User `{}` doesn't have rights to edit project `{}`"
                                  .format(user.username, self.repo_name))
+
+    @property
+    def readme_content(self) -> str:
+        return app.config["README_TEMPLATE"].format(**{
+            "project_owner": self.user.name,
+            "project_owner_url": self.user.fas_url,
+        })
 
     @property
     def docker_pull_snippet(self) -> str:
