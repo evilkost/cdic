@@ -138,6 +138,9 @@
 
           {% if project.dockerhub_repo_exists %}
           <h4 class="text-center">Pull results:</h4>
+          <div class="alert alert-danger" role="alert">
+            Fedora doesn't provide any guaranties. Use on your own risk.
+          </div>
           <div class="well">
                 <code>
                   {{ project.docker_pull_snippet }}
