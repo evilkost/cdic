@@ -10,11 +10,14 @@ import logging
 
 from urllib.parse import urljoin
 
-from backports.typing import List
+
+from backports.typing import List, Iterable
 
 from dateutil.parser import parse as dt_parse
 import pytz
 import requests
+from requests import get
+from lxml import html
 
 from .. import app
 from ..exceptions import DockerHubCreateRepoError, DockerHubQueryError
@@ -169,7 +172,6 @@ def delete_dockerhub(repo_name):
     log.info("Finished deletion of dockerhub repo: {}".format(repo_name))
 
 
-
 def prepare_casperjs_script(script_name):
     credentionals = os.path.join(app.config["VAR_ROOT"], "dockerhub_credentionals.json")
     if not os.path.exists(credentionals):
@@ -183,3 +185,45 @@ def prepare_casperjs_script(script_name):
     script_path = os.path.abspath(os.path.join(
         src_dir, "../../../phantom/{}".format(script_name)))
     return credentionals, script_path
+
+
+class BuildStatus(object):
+
+    def __init__(self, repo_name, build_id, href, status):
+        self.repo_name = repo_name
+        self.build_id = build_id
+        self.href = href
+        self.status = status
+
+    def __str__(self):
+        return "<BS: {} id: {}, status: {}>".format(self.repo_name, self.build_id, self.status)
+
+
+def fetch_build_status_fast(user_name: str, repo_name: str) -> Iterable[BuildStatus]:
+
+    url = "https://hub.docker.com/r/{}/{}/builds/".format(user_name, repo_name)
+    raw = get(url)
+
+    tree = html.fromstring(raw.text)
+
+    rows = tree.xpath("//table//tbody//tr")
+    result = []
+    for row in rows:
+        children = row.getchildren()
+        log.error(children)
+        try:
+            b_elem = children[0].xpath(".//a")[0]
+
+            href = b_elem.attrib["href"]
+            build_id = b_elem.text_content()
+            status = children[0].text_content()
+
+            bs = BuildStatus(repo_name, build_id, href, status)
+            print(str(bs))
+            log.info(bs)
+            result.append(bs)
+
+        except Exception as e:
+            log.exception("Failed to parse row")
+
+    return result
