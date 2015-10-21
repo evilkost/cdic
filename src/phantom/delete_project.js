@@ -1,9 +1,9 @@
 var casper = require('casper').create({
-    verbose: true,
-    logLevel: "info",
-    pageSettings: {
-        userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11"
-    },
+//    verbose: true,
+//    logLevel: "debug",
+//    pageSettings: {
+//        userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11"
+//    },
     viewportSize: {
       width: 1920,
       height: 1080
@@ -19,6 +19,7 @@ var utils = require('utils');
 // load data
 var repo_name = casper.cli.get("repo_name");
 var credentials = casper.cli.get("credentials");
+var save_to = casper.cli.get("save_to");
 
 var data = JSON.parse(fs.read(credentials));
 
@@ -40,11 +41,8 @@ casper.waitForSelector(button_create_selector, function() {
     this.click(x("((//form)[2]//input)[3]"));
 });
 
-var test_after_login_selector = x("//input[@placeholder='Type to filter repositories by name']");
-casper.waitForSelector(test_after_login_selector, function() {
-    this.echo(this.getCurrentUrl());
-    this.capture("001-login_should_be_done.png");
-});
+var test_after_login_selector = x("//a[text()='Create']");
+casper.waitForSelector(test_after_login_selector);
 
 var dh_repo_url_delete = 'https://hub.docker.com/r/' +username + '/' + repo_name + '/~/settings/'
 
@@ -55,35 +53,30 @@ var delete_input_selector = x("(//input)[2]");
 casper.waitForSelector(delete_button_selector, function(){
     casper.click(delete_button_selector);
 });
+
 casper.waitForSelector(delete_input_selector, function(){
     casper.wait(100);
-});
-
-// again react.js magic, we should enter symbols one-by-one :(
-function enter_symbol(rest){
-    if( rest.length > 0){
-        var symbol = rest.slice(0, 1);
-        var new_rest = rest.slice(1);
-
+    casper.each(repo_name.split(''), function(self, symbol){
         casper.then(function() {
             casper.sendKeys(delete_input_selector, symbol);
-            enter_symbol(new_rest)
         });
-    }
-}
-
-casper.then(function() {
-    enter_symbol(repo_name);
+    });
 });
 
 casper.waitForSelector(delete_button_selector, function(){
-//    casper.capture("200-before_confirm.png")
+    // nb: now this selector points to another button
     casper.click(delete_button_selector);
 });
 
 casper.waitForSelector(test_after_login_selector, function() {
-    this.echo(this.getCurrentUrl());
-//    this.capture("201-delete_done.png");
+
+    var result = {
+        "repo_name": repo_name,
+        "status": "deleted"
+    };
+
+//    casper.echo("saving to: " + save_to);
+    fs.write(save_to, JSON.stringify(result), 'w');
 });
 
 casper.run();
