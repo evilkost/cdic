@@ -5,8 +5,9 @@ from flask_wtf import Form
 from wtforms import StringField, RadioField, TextAreaField, ValidationError
 from wtforms.validators import DataRequired, Regexp
 from wtforms.fields.html5 import URLField
-from app.models import Project
 
+
+from ..models import Project
 from ..logic.project_logic import exists_for_user
 from ..constants import SourceType
 

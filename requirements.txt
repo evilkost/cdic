@@ -5,6 +5,7 @@ Flask-WTF
 Flask-SQLAlchemy
 Flask-Bootstrap
 SQLAlchemy
+psycopg2
 alembic
 pytz
 python-dateutil
@@ -23,6 +24,7 @@ lxml
 tox
 pytest
 pytest-cov
+testing.postgresql
 
 sphinx
 sphinxcontrib-httpdomain

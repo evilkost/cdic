@@ -4,6 +4,7 @@ import datetime
 from backports.typing import Iterable
 
 from sqlalchemy import UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSON
 
 
 # VV todo: looks like it import DNS but py3 version should be dns
@@ -57,6 +58,7 @@ class User(db.Model):
     #         return libravatar_url(email=self.mail, https=True)
     #     except IOError:
     #         return ""
+
 
 class ProjectEvent(db.Model):
 
@@ -231,6 +233,18 @@ class Project(db.Model):
                     self.dh_start_done_on < self.dh_start_requested_on:
                 return True
         return False
+
+
+class DhBuildInfo(db.Model):
+
+    __tablename__ = "dh_build_info"
+
+    id = db.Column(db.String(127), primary_key=True)
+
+    project_id = db.Column(db.Integer, db.ForeignKey("project.id"))
+    project = db.relationship("Project", backref=db.backref("builds_info", lazy="dynamic"))
+
+    info = db.Column(JSON)
 
 
 def get_copr_url(username: str, coprname: str) -> str:

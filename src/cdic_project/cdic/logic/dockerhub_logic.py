@@ -2,9 +2,9 @@
 import datetime
 import logging
 
-from .. import db
-from app.exceptions import DockerHubQueryError
-from ..util.dockerhub import create_dockerhub_automated_build_repo, get_builds_history, run_dockerhub_build
+from .. import db, app
+from ..exceptions import DockerHubQueryError
+# from ..util.dockerhub import create_dockerhub_automated_build_repo, get_builds_history, run_dockerhub_build
 from ..logic.event_logic import create_project_event
 from ..logic.project_logic import get_project_by_id, get_projects_to_update_dh_status, get_projects_to_create_dh, \
     get_projects_to_start_dh_build
@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 
 def create_dockerhub_repo(project_id: int):
     project = get_project_by_id(project_id)
+
     create_dockerhub_automated_build_repo(project.repo_name)
 
     project.dockerhub_repo_exists = True

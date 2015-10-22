@@ -1,13 +1,9 @@
 # coding: utf-8
 
-import json
-from unittest import mock
 
-
-def test_base():
+def test_dummy():
     """
     Test nothing, should always be fine
     """
 
     assert True
-

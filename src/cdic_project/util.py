@@ -13,6 +13,7 @@ def setup_logging(log_file_path=None):
         level=logging.DEBUG
     )
 
+
 def utc_now():
     """
     :return datetime.datetime: Current utc datetime with specified timezone

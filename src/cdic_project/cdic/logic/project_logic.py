@@ -13,10 +13,8 @@ from sqlalchemy.orm.query import Query
 from sqlalchemy.sql import true, or_, false, and_
 
 from .. import app, db, git_store
-from app.async.pusher import PREFIX, ctx_wrapper
-from app.async.task import OnDemandTask
-from app.util.dockerhub import delete_dockerhub
-from app.util.github import GhClient
+
+from ..util.github import GhClient
 from ..constants import SourceType
 from ..exceptions import PatchDockerfileException, FailedToFindProjectByDockerhubName, DockerHubQueryError
 from ..models import Project, User

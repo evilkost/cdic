@@ -4,13 +4,8 @@ import json
 import logging
 import flask
 from werkzeug.utils import redirect
-from app.exceptions import CoprSearchError
-from app.forms.copr import CoprSearchLinkForm, CoprLinkAddForm
 
-from app.logic.event_logic import create_project_event
-from app.logic.project_logic import get_project_by_id, update_patched_dockerfile
 
-from app.views.auth import login_required
 # from app.views.copr import log
 
 log = logging.getLogger(__name__)
@@ -20,6 +15,9 @@ from flask import Blueprint, request, abort, render_template, flash, g, redirect
 
 from .. import db, app
 from ..models import Project
+from ..exceptions import CoprSearchError
+from ..forms.copr import CoprSearchLinkForm, CoprLinkAddForm
+
 from ..views.auth import login_required
 from ..logic.copr_logic import get_link_by_id, create_link, check_link_exists
 from ..logic.user_logic import get_user_by_name

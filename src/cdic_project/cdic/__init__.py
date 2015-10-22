@@ -12,6 +12,7 @@ from werkzeug.utils import redirect
 
 from .exceptions import AccessRejected
 from .util.git import GitStore
+from .util.dockerhub import DhConnector
 
 app = Flask(__name__)
 
@@ -28,6 +29,8 @@ git_store = GitStore(app.config["CDIC_WORKPLACE"])
 
 db = SQLAlchemy()
 db.init_app(app)
+
+app.dh_connector = DhConnector(app.config)
 
 from .filters import time_ago
 
@@ -55,10 +58,12 @@ def page_not_found(error):
     flask.flash("requested page not found: {}".format(flask.request.path), "danger")
     return redirect(url_for("main.index"))
 
+
 @app.errorhandler(404)
 def page_not_found(error):
     flask.flash("requested page not found: {}".format(flask.request.path), "danger")
     return redirect(url_for("main.index"))
+
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -67,7 +72,11 @@ if __name__ == "__main__":
         level=logging.DEBUG
     )
 
+
 @app.errorhandler(AccessRejected)
 def access_rejected_handler(error):
     flask.flash(str(error), "danger")
     return redirect(url_for("main.index"))
+
+
+
