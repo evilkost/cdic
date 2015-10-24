@@ -21,7 +21,7 @@ from ..forms.copr import CoprSearchLinkForm, CoprLinkAddForm
 from ..views.auth import login_required
 from ..logic.copr_logic import get_link_by_id, create_link, check_link_exists
 from ..logic.user_logic import get_user_by_name
-from ..logic.build_logic import schedule_build
+from ..actions.build import schedule_build
 from ..logic.project_logic import add_project_from_form, get_projects_by_user, \
     get_project_by_id, update_project_from_form, update_patched_dockerfile, get_project_by_title
 from ..logic.event_logic import create_project_event
@@ -33,8 +33,7 @@ from ..constants import EventType
 project_bp = Blueprint("project", __name__)
 
 
-
-@project_bp.route("/users/<username>/")
+@project_bp.route("/u/<username>/")
 def list_by_user(username):
     try:
         owner = get_user_by_name(username)
@@ -54,14 +53,15 @@ def details_by_id(project_id):
     project = get_project_by_id(int(project_id))
     return redirect(url_for("project.details", username=project.user.username, title=project.title))
 
-@project_bp.route("/users/<username>/<title>/")
+
+@project_bp.route("/u/<username>/p/<title>/")
 def details(username, title):
     user = get_user_by_name(username)
     project = get_project_by_title(user, title)
     return render_template("project/details.html", project=project, project_info_page=True)
 
 
-@project_bp.route("/projects/add", methods=["GET"])
+@project_bp.route("/p/add", methods=["GET"])
 @login_required
 def create_view(form=None):
     if not form:
@@ -69,7 +69,7 @@ def create_view(form=None):
     return render_template("project/add.html", form=form)
 
 
-@project_bp.route("/projects/add", methods=["POST"])
+@project_bp.route("/p/add", methods=["POST"])
 @login_required
 def create_handle():
     form = ProjectCreateForm()
@@ -84,7 +84,8 @@ def create_handle():
     else:
         return create_view(form=form)
 
-@project_bp.route("/users/<username>/<title>/start_build", methods=["GET", "POST"])
+
+@project_bp.route("/u/<username>/p/<title>/start_build", methods=["GET", "POST"])
 @login_required
 def start_build(username, title):
     user = get_user_by_name(username)
@@ -100,8 +101,7 @@ def start_build(username, title):
     return redirect(url_for("project.details", username=project.user.username, title=project.title))
 
 
-
-@project_bp.route("/users/<username>/<title>/edit", methods=["GET", "POST"])
+@project_bp.route("/u/<username>/p/<title>/edit", methods=["GET", "POST"])
 @login_required
 def edit(username, title):
     user = get_user_by_name(username)

@@ -1,6 +1,7 @@
 # coding: utf-8
 import datetime
 from io import StringIO
+import json
 import os
 
 import logging
@@ -11,16 +12,114 @@ from flask_wtf import Form
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.query import Query
 from sqlalchemy.sql import true, or_, false, and_
+from sqlalchemy.orm.exc import NoResultFound
 
 from .. import app, db, git_store
 
+
 from ..util.github import GhClient
-from ..constants import SourceType
+from ..constants import SourceType, EventType
 from ..exceptions import PatchDockerfileException, FailedToFindProjectByDockerhubName, DockerHubQueryError
 from ..models import Project, User
+from .event_logic import create_project_event
 # from ..forms.project import ProjectForm
 
 log = logging.getLogger(__name__)
+
+
+class ProjectLogic(object):
+
+    @classmethod
+    def get_project_by_id_safe(
+            cls, project_id: int,
+            hide_removed_project: bool=True) -> Project or None:
+
+        try:
+            project = cls.query_project_by_id(project_id).one()
+        except NoResultFound:
+            return None
+
+        if hide_removed_project and project.delete_requested_on is not None:
+            return None
+        else:
+            return project
+
+    @classmethod
+    def query_project_by_id(cls, project_id: int) -> Query:
+        """
+        :raises NoResultFound: when no such project exists
+        """
+        return Project.query.filter(Project.id == project_id)
+
+    @classmethod
+    def query_all_ready_projects(cls) -> Query:
+        """
+        :return: All projects which is not deleted and already have GH and DH repos ready
+        """
+        return (
+            Project.query
+            .filter(Project.github_repo_exists)
+            .filter(Project.dockerhub_repo_exists)
+            .filter(Project.delete_requested_on.is_(None))
+        )
+
+    @classmethod
+    def get_projects_to_run_build_again(cls) -> List[Project]:
+        delay = datetime.timedelta(600)  # seconds, todo: move to config
+        old_enough = datetime.datetime.utcnow() - datetime.timedelta(delay)
+        projects = (
+            cls.query_all_ready_projects()
+            .filter(Project.build_requested_on.is_not(None))
+            .filter(Project.build_requested_on < old_enough)
+            .filter(or_(
+                Project.build_triggered_on.is_(None),
+                Project.build_triggered_on < Project.build_requested_on
+            ))
+        ).all()
+        return projects
+
+    @classmethod
+    def update_dockerfile(cls, project: Project, silent=True):
+        update_patched_dockerfile(project)
+        if not silent:
+            build_event = create_project_event(
+                project, "Started new build",
+                data_json=json.dumps({"build_requested_dt": datetime.datetime.utcnow().isoformat()}),
+                event_type=EventType.BUILD_REQUESTED
+            )
+            db.session.add(build_event)
+        db.session.add(project)
+
+    @classmethod
+    def should_commit_changes(cls, p: Project):
+        if p.patched_dockerfile_on is None:
+            return False
+        elif p.local_repo_changed_on is None:
+            return True
+        else:
+            return p.patched_dockerfile_on > p.local_repo_changed_on
+
+    @classmethod
+    def should_push_changes(cls, p: Project):
+        if p.local_repo_changed_on is None:
+            return False
+        elif p.local_repo_pushed_on is None:
+            return True
+        else:
+            return p.local_repo_changed_on > p.local_repo_pushed_on
+
+    @classmethod
+    def should_send_build_trigger(cls, p: Project):
+        if p.build_requested_on is None:
+            return False
+        elif p.local_repo_pushed_on is None:
+            return False
+        elif p.build_triggered_on is None:
+            return True
+        else:
+            return p.build_triggered_on < p.build_requested_on
+
+
 
 def get_all_projects_query() -> Query:
     return Project.query.order_by(Project.created_on.desc())
@@ -183,7 +282,7 @@ def update_patched_dockerfile(project: Project):
                                   .format(project.source_mode))
 
     project.patched_dockerfile = patched
-    project.local_repo_changed_on = datetime.datetime.utcnow()
+    project.patched_dockerfile_on = datetime.datetime.utcnow()
     return project
 
 

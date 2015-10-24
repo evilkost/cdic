@@ -4,7 +4,7 @@ import os
 import shutil
 import logging
 
-from backports.typing import List
+from backports.typing import List, Iterable
 
 import git
 from git import Repo
@@ -108,13 +108,13 @@ class GitStore(object):
         return rem.push(refspec, force=True)
 
     @staticmethod
-    def initial_commit(repo: Repo, to_commit: List[str],  message: str=None):
+    def initial_commit(repo: Repo, to_commit: Iterable[str],  message: str=None):
         repo.index.add(to_commit)
         msg = message or "Initial commit of {}".format(", ".join(to_commit))
         repo.index.commit(msg)
 
     @staticmethod
-    def commit_changes(repo: Repo, to_commit: List[str],  message: str=None):
+    def commit_changes(repo: Repo, to_commit: Iterable[str],  message: str=None):
         # TODO: doesn't exists before the first commit, handle exception here
         # import ipdb; ipdb.set_trace()
         # if repo.head.commit.diff():

@@ -1,175 +1,24 @@
 # coding: utf-8
+
 from abc import ABCMeta
 import datetime
 import json
-import random
 import os
 from tempfile import NamedTemporaryFile
-import time
 import subprocess
 import pipes
 import logging
 
-from urllib.parse import urljoin
-
-
-from backports.typing import List, Iterable
-
+from backports.typing import Iterable
 from dateutil.parser import parse as dt_parse
-import pytz
 from requests import get
 from lxml import html
 
-from ..exceptions import DockerHubCreateRepoError, DockerHubQueryError
+from ..exceptions import DockerHubQueryError
 
 log = logging.getLogger(__name__)
 
 logging.getLogger("requests").setLevel(logging.WARN)
-
-
-def dt_parse_to_utc_without_tz(val: str) -> datetime.datetime:
-    tz = pytz.timezone("UTC")
-    return dt_parse(val).astimezone(tz).replace(tzinfo=None)
-
-
-# def get_builds_history(repo_name: str) -> List[dict]:
-#     """
-#     :param repo_name:
-#     :raises DockerHubQueryError: If failed to execute query script or got mall formed result
-#     """
-#     src_dir = os.path.dirname(os.path.abspath(__file__))
-#     script_path = os.path.abspath(os.path.join(
-#         src_dir,  "../../../phantom/get_build_history.js"))
-#
-#     cmd = [
-#         "/usr/bin/casperjs",
-#         "--repo_name={}".format(pipes.quote(repo_name)),
-#         "--dockerhub_user={}".format(app.config["DOCKERHUB_USERNAME"]),
-#         script_path
-#     ]
-#     log.debug("Executing:\n{}".format(" ".join(cmd)))
-#
-#     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-#     std_out, std_err = map(lambda x: x.decode("utf-8"), p.communicate())
-#
-#     if p.returncode != 0:
-#         raise DockerHubQueryError(msg="Casperjs command failed.: {}".format(" ".join(cmd)),
-#                                   return_code=p.returncode, stdout=std_out, stderr=std_err)
-#     else:
-#         log.debug("STDOUT: \n" + std_out)
-#
-#     def fix_date(build_dict):
-#         return dict(
-#             build_id=build_dict["build_id"],
-#             status=build_dict["status"],
-#             created_on=dt_parse_to_utc_without_tz(build_dict["created_on"]),
-#             updated_on=dt_parse_to_utc_without_tz(build_dict["updated_on"])
-#         )
-#     try:
-#         return [fix_date(b) for b in json.loads(std_out)]
-#     except (ValueError, KeyError):
-#         raise DockerHubQueryError(msg="Failed to parse casperjs respons: `{}` after cmd: `{}`"
-#                                   .format(std_out, " ".join(cmd)))
-#
-# def run_dockerhub_build(repo_name):
-#     """
-#     Run existing automated build
-#     :raises DockerHubQueryError: when failed to run build
-#     """
-#
-#     # todo add project.dh_run_build_sent_on_local_time
-#     log.info("Sending request for the new build: {}".format(repo_name))
-#     # ensure that credentials file for casperjs exists,
-#     # todo: generalize functions
-#     credentionals, script_path = prepare_casperjs_script("run_build.js")
-#
-#     cmd = [
-#         "/usr/bin/casperjs",
-#         "--repo_name={}".format(pipes.quote(repo_name)),
-#         "--credentials={}".format(pipes.quote(credentionals)),
-#         script_path
-#     ]
-#     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-#     std_out, std_err = map(lambda x: x.decode("utf-8"), p.communicate())
-#
-#     if p.returncode != 0:
-#         raise DockerHubQueryError(msg="Casperjs command failed.: {}".format(" ".join(cmd)),
-#                                   return_code=p.returncode, stdout=std_out, stderr=std_err)
-#     else:
-#         log.debug("STDOUT: \n" + std_out)
-#
-#
-# def create_dockerhub_automated_build_repo(repo_name):
-#     """
-#     Create new automated build at dockerhub using phantomjs/casperjs
-#     This function is rather time consuming, expect 15secons on average
-#
-#     :param repo_name:
-#     :return: Nothing on success
-#     :raises DockerHubCreateRepoError: when failed to create automated build
-#     """
-#     log.info("Creating new automated build: {}".format(repo_name))
-#     # ensure that credentials file for casperjs exists
-#     credentionals, script_path = prepare_casperjs_script("dockerhub_create.js")
-#
-#     cmd = [
-#         "/usr/bin/casperjs",
-#         "--repo_name={}".format(pipes.quote(repo_name)),
-#         "--credentials={}".format(pipes.quote(credentionals)),
-#         script_path
-#     ]
-#     log.debug("Executing:\n{}".format(" ".join(cmd)))
-#
-#     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-#     std_out, std_err = map(lambda x: x.decode("utf-8"), p.communicate())
-#
-#     if p.returncode != 0:
-#         raise DockerHubCreateRepoError(msg="Casperjs command failed.: {}".format(" ".join(cmd)),
-#                                        return_code=p.returncode, stdout=std_out, stderr=std_err)
-#     else:
-#         log.debug("STDOUT: \n" + std_out)
-#
-#     # now we need to check that repo was really created,
-#     # because dockerhub returns 200 even if it fails to create new repo
-#     url = 'https://registry.hub.docker.com/u/' + app.config["DOCKERHUB_USERNAME"] + '/' + repo_name
-#     log.debug("check that repo was created at: {}".format(url))
-#     response = requests.get(url)
-#     log.info(response)
-#     if response.status_code != 200:
-#         raise DockerHubCreateRepoError(msg="Repo doesn't exists at `{}`".format(url))
-#
-#     log.info("Finished creation of new dockerhub repo: {}".format(repo_name))
-#
-#
-# def delete_dockerhub(repo_name):
-#     log.info("Deleting repo: {}".format(repo_name))
-#     credentionals, script_path = prepare_casperjs_script("dockerhub_delete.js")
-#
-#     cmd = [
-#         "/usr/bin/casperjs",
-#         "--repo_name={}".format(pipes.quote(repo_name)),
-#         "--credentials={}".format(pipes.quote(credentionals)),
-#         script_path
-#     ]
-#     log.debug("Executing:\n{}".format(" ".join(cmd)))
-#     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-#     std_out, std_err = map(lambda x: x.decode("utf-8"), p.communicate())
-#
-#     if p.returncode != 0:
-#         log.error("Casperjs command failed.: {}\n return code: {}, stdout: {}, stderr: {}"
-#                   .format(" ".join(cmd), p.returncode, std_out, std_err))
-#     else:
-#         log.debug("STDOUT: \n" + std_out)
-#
-#     # need to ensure that dh build actually vanished
-#     url = 'https://registry.hub.docker.com/u/' + app.config["DOCKERHUB_USERNAME"] + '/' + repo_name
-#     log.debug("check that repo was vanished from: {}".format(url))
-#     response = requests.get(url)
-#     log.info(response)
-#     if response.status_code == 200:
-#         raise DockerHubQueryError(msg="Repo still exists at `{}`".format(url))
-#
-#     log.info("Finished deletion of dockerhub repo: {}".format(repo_name))
 
 
 class BuildInfo(object):
@@ -202,7 +51,6 @@ class BuildInfo(object):
         return self.info_table.get("error")
 
 
-
 class BuildStatus(object):
 
     def __init__(self, repo_name, build_id, href, status):
@@ -220,6 +68,7 @@ class BuildStatus(object):
         def __init__(self, is_ok: bool, data: dict=None):
             self.is_ok = is_ok
             self.data = data
+
 
 class AbstractDhConnector(metaclass=ABCMeta):
 
@@ -246,7 +95,12 @@ class ScriptResult(object):
         self.data = data
 
 
-class DhConnector(AbstractDhConnector):
+class ScriptDriver(metaclass=ABCMeta):
+    def run_script(self, script_name: str, options: dict) -> ScriptResult:
+        pass
+
+
+class CasperJsScriptDriver(ScriptDriver):
 
     def __init__(self, opts):
         """
@@ -258,51 +112,10 @@ class DhConnector(AbstractDhConnector):
             *GITHUB_USER*
 
         """
-
         self.opts = opts
 
-    def get_build_info(self, repo_name: str, build_id: str) -> BuildInfo or None:
-        log.info("Getting build info from dockerhub")
-        result = self.run_casperjs_script(
-            "get_build_info.js", {"repo_name": repo_name, "build_id": build_id})
-
-        if result.is_ok and "info_table" in result.data and "logs" in result.data:
-            return BuildInfo(result.data["info_table"], result.data["logs"])
-
-        return None
-
-    def create_project(self, repo_name) -> bool:
-        """
-        :return: True on successful creation, False otherwise
-        """
-        log.info("Creating automated project: {}".format(repo_name))
-        result = self.run_casperjs_script("create_project.js", {"repo_name": repo_name})
-        if result.is_ok and result.data["status"] == "created":
-            return True
-
-        return False
-
-    def delete_project(self, repo_name) -> bool:
-        """
-        :return: True on successful deletion, False otherwise
-        """
-        log.info("Deleting repo: {}".format(repo_name))
-        result = self.run_casperjs_script("delete_project.js", {"repo_name": repo_name})
-        if result.is_ok and result.data["status"] == "deleted":
-            return True
-        else:
-            return False
-
-    def get_build_trigger_url(self, repo_name: str) -> str or None:
-        log.info("Getting build trigger url: {}".format(repo_name))
-        result = self.run_casperjs_script("get_build_trigger.js", {"repo_name": repo_name})
-        if result.is_ok:
-            return result.data["trigger_url"]
-        else:
-            raise DockerHubQueryError(msg="Unable to get trigger url for project `{}`".format(repo_name))
-
-    def run_casperjs_script(self, script_name: str, options: dict) -> ScriptResult:
-        credentionals, script_path = self.prepare_casperjs_script(script_name)
+    def run_script(self, script_name: str, options: dict) -> ScriptResult:
+        credentionals, script_path = self.prepare_script(script_name)
         with NamedTemporaryFile() as result_file:
             save_to = result_file.name
 
@@ -326,8 +139,9 @@ class DhConnector(AbstractDhConnector):
                 log.exception("Failed to execute cmd: {}".format(cmd))
                 return ScriptResult(False, None)
 
-    def prepare_casperjs_script(self, script_name):
-        credentionals = os.path.join(self.opts["VAR_ROOT"], "dockerhub_credentionals.json")
+    def prepare_script(self, script_name):
+        credentionals = os.path.join(self.opts["VAR_ROOT"],
+                                     "dockerhub_credentionals.json")
         if not os.path.exists(credentionals):
             with open(credentionals, "w") as handle:
                 handle.write(json.dumps({
@@ -339,6 +153,63 @@ class DhConnector(AbstractDhConnector):
         script_path = os.path.abspath(os.path.join(
             src_dir, "../../../phantom/{}".format(script_name)))
         return credentionals, script_path
+
+
+class DhConnector(AbstractDhConnector):
+
+    def __init__(self, opts, script_driver=None):
+        """
+        :param dict opts: Dict with the following keys:
+
+            *VAR_ROOT* location to store runtime data
+            *DOCKERHUB_USERNAME*
+            *DOCKERHUB_PASSWORD*
+            *GITHUB_USER*
+        :type script_driver: ScriptDriver
+        """
+
+        self.opts = opts
+        self.driver = script_driver or CasperJsScriptDriver(opts)
+
+    def get_build_info(self, repo_name: str, build_id: str) -> BuildInfo or None:
+        log.info("Getting build info from dockerhub")
+        result = self.driver.run_script(
+            "get_build_info.js", {"repo_name": repo_name, "build_id": build_id})
+
+        if result.is_ok and "info_table" in result.data and "logs" in result.data:
+            return BuildInfo(result.data["info_table"], result.data["logs"])
+
+        return None
+
+    def create_project(self, repo_name) -> bool:
+        """
+        :return: True on successful creation, False otherwise
+        """
+        log.info("Creating automated project: {}".format(repo_name))
+        result = self.driver.run_script("create_project.js", {"repo_name": repo_name})
+        if result.is_ok and result.data["status"] == "created":
+            return True
+
+        return False
+
+    def delete_project(self, repo_name) -> bool:
+        """
+        :return: True on successful deletion, False otherwise
+        """
+        log.info("Deleting repo: {}".format(repo_name))
+        result = self.driver.run_script("delete_project.js", {"repo_name": repo_name})
+        if result.is_ok and result.data["status"] == "deleted":
+            return True
+        else:
+            return False
+
+    def get_build_trigger_url(self, repo_name: str) -> str or None:
+        log.info("Getting build trigger url: {}".format(repo_name))
+        result = self.driver.run_script("get_build_trigger.js", {"repo_name": repo_name})
+        if result.is_ok:
+            return result.data["trigger_url"]
+        else:
+            raise DockerHubQueryError(msg="Unable to get trigger url for project `{}`".format(repo_name))
 
     def fetch_builds_status(self, repo_name: str) -> Iterable[BuildStatus]:
         url = "https://hub.docker.com/r/{}/{}/builds/".format(

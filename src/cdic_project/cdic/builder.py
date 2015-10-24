@@ -15,26 +15,26 @@ from .models import Project
 log = logging.getLogger(__name__)
 
 
-def update_local_repo_and_push(project: Project):
-    if project.source_mode == SourceType.LOCAL_TEXT:
-
-        repo = git_store.get_existing_repo(project.user.username, project.title)
-
-        with open(os.path.join(repo.working_dir, "Dockerfile"), "w") as df:
-            df.write(project.patched_dockerfile)
-
-        with open(os.path.join(repo.working_dir, "README.md"), "w") as handle:
-            handle.write(project.readme_content)
-
-        git_store.commit_changes(repo, ["Dockerfile", "README.md"])
-        git_store.push_remote(repo)
-        project.local_repo_pushed_on = datetime.datetime.utcnow()
-        pe = create_project_event(project, "New version pushed to github")
-        db.session.add_all([pe, project])
-
-    else:
-        raise NotImplementedError("Update of local repo for source mode: {} "
-                                  "not implemented".format(project.source_mode))
+# def update_local_repo_and_push(project: Project):
+#     if project.source_mode == SourceType.LOCAL_TEXT:
+#
+#         repo = git_store.get_existing_repo(project.user.username, project.title)
+#
+#         with open(os.path.join(repo.working_dir, "Dockerfile"), "w") as df:
+#             df.write(project.patched_dockerfile)
+#
+#         with open(os.path.join(repo.working_dir, "README.md"), "w") as handle:
+#             handle.write(project.readme_content)
+#
+#         git_store.commit_changes(repo, ["Dockerfile", "README.md"])
+#         git_store.push_remote(repo)
+#         project.local_repo_pushed_on = datetime.datetime.utcnow()
+#         pe = create_project_event(project, "New version pushed to github")
+#         db.session.add_all([pe, project])
+#
+#     else:
+#         raise NotImplementedError("Update of local repo for source mode: {} "
+#                                   "not implemented".format(project.source_mode))
 
 
 def init_local_repo(project: Project):

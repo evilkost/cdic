@@ -94,13 +94,17 @@ class Project(db.Model):
     created_on = db.Column(db.DateTime, default=db.func.now())
     updated_on = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
+    build_requested_on = db.Column(db.DateTime)  # time, when the user requested new build
+    build_triggered_on = db.Column(db.DateTime)  # time, when the service invoked dockerhub build trigger
+
     # this variable define only "local" build process, after the user click on "Run build" and until
     # we push changes to github or create docker hub (for the first build)
-    build_is_running = db.Column(db.Boolean, default=False)
+    # build_is_running = db.Column(db.Boolean, default=False)
     local_repo_exists = db.Column(db.Boolean, default=False)
     patched_dockerfile = db.Column(db.Text)
+    patched_dockerfile_on = db.Column(db.DateTime)
 
-    build_started_on = db.Column(db.DateTime)
+    # build_started_on = db.Column(db.DateTime)
     local_repo_changed_on = db.Column(db.DateTime)
     local_repo_pushed_on = db.Column(db.DateTime)
 
@@ -125,9 +129,18 @@ class Project(db.Model):
 
     github_repo_exists = db.Column(db.Boolean, default=False)
     dockerhub_repo_exists = db.Column(db.Boolean, default=False)
+    dh_build_trigger_url = db.Column(db.Text)
 
     # set on delete requests, indicates that project going to be deleted
     delete_requested_on = db.Column(db.DateTime, index=True)
+
+    def is_build_request_in_progress(self) -> bool:
+        if self.build_requested_on is None:
+            return False
+        elif self.build_triggered_on is None:
+            return True
+        else:
+            return self.build_requested_on > self.build_triggered_on
 
     def is_editable_by(self, user: User) -> bool:
         return self.user.id == user.id
@@ -149,6 +162,14 @@ class Project(db.Model):
         return "docker pull {}/{}:latest".format(
             app.config["DOCKERHUB_USERNAME"], self.repo_name)
 
+    @property
+    def ready_to_run(self):
+        if not all([self.github_repo_exists, self.dh_build_trigger_url]):
+            return False
+        else:
+            return not self.is_build_request_in_progress()
+
+    # older methods
     @property
     def is_runnable(self) -> bool:
         if not self.build_is_running and self.patched_dockerfile:
@@ -212,19 +233,19 @@ class Project(db.Model):
     def recent_events(self) -> Iterable[ProjectEvent]:
         return self.history_events.order_by(ProjectEvent.created_on.desc())
 
-    @property
-    def show_build_in_progress(self) -> bool:
-        if not self.build_started_on:
-            return False
-        if self.delete_requested_on is not None:
-            return False
-        if not self.local_repo_pushed_on or not self.dockerhub_build_status_updated_on_local_time:
-            return True
-
-        if self.build_started_on > self.dockerhub_build_status_updated_on_local_time:
-            return True
-
-        return not self.is_dh_build_finished
+    # @property
+    # def show_build_in_progress(self) -> bool:
+    #     if not self.build_started_on:
+    #         return False
+    #     if self.delete_requested_on is not None:
+    #         return False
+    #     if not self.local_repo_pushed_on or not self.dockerhub_build_status_updated_on_local_time:
+    #         return True
+    #
+    #     if self.build_started_on > self.dockerhub_build_status_updated_on_local_time:
+    #         return True
+    #
+    #     return not self.is_dh_build_finished
 
     @property
     def should_start_dh_build(self) -> bool:
@@ -274,3 +295,30 @@ class LinkedCopr(db.Model):
     @property
     def copr_url(self) -> str:
         return get_copr_url(self.username, self.coprname)
+
+
+class JobState(object):
+    NEW = "new"
+    TAKEN = "taken"
+    DONE = "done"
+
+
+class Job(db.Model):
+
+    __tablename__ = "task"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # see JobStates
+    state = db.Column(db.String(31), nullable=False)
+    name = db.Column(db.String(31), nullable=False)
+
+    # in seconds
+    max_execution_time = db.Column(db.Integer, default=300)
+    max_retries = db.Column(db.Integer, default=3)
+    priority = db.Column(db.Integer, default=0)  # 0 - lowest
+
+    created_on = db.Column(db.DateTime, default=db.func.now())
+    taken_on = db.Column(db.DateTime)
+
+    retry_count = db.Column(db.Integer, default=0)

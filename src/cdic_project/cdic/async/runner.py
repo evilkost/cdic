@@ -11,8 +11,7 @@ from asyncio import coroutine, async, Future
 import asyncio_redis
 
 
-from .task import PeriodicTask, OnDemandTask
-
+from .task import PeriodicTask, OnDemandTask, TaskDef
 
 logging.getLogger("asyncio").setLevel(logging.WARN)
 log = logging.getLogger(__name__)
@@ -114,3 +113,98 @@ class Runner(object):
         async(self.subscribe_on_demand_tasks())
         self.loop.run_forever()
 
+
+class RunnerAlt(object):
+
+    def __init__(self, app, loop=None):
+        self.app = app
+        self.loop = loop or asyncio.get_event_loop()
+
+        self.pool = ThreadPoolExecutor(6)
+        # if we use dedicated processes we should setup centralized logging
+        # self.pool = ProcessPoolExecutor(4)
+        self.redis_connection = None
+
+        self.is_running = False
+
+        self.tasks_spec = None  # todo: {channel -> TaskSpec}
+
+        self.pending_tasks = []  # list of TaskDef
+        # we periodically invoke their reschedule_fn
+
+        self.sleep_time = 120
+
+    def get_channels_to_listen(self):
+        return [tc.channel for tc in self.tasks_spec.values()]
+
+    def register_task(self, td: TaskDef):
+        self.tasks_spec[td.name] = td
+
+    @coroutine
+    def dispatch_task(self, msg):
+        pass
+
+    @coroutine
+    def subscribe_on_demand_tasks(self):
+        # todo: get host/port from app.config
+        # todo: create local wrapper for redis provider
+        self.redis_connection = yield from asyncio_redis.Connection.create()
+        # for channel, od_task in self.on_demand_tasks.items():
+        subscriber = yield from self.redis_connection.start_subscribe()
+        yield from subscriber.subscribe(self.get_channels_to_listen())
+        while self.is_running:
+            reply = yield from subscriber.next_published()
+            log.debug('Received: `{}` on channel `{}`'
+                      .format(repr(reply.value), reply.channel))
+            yield self.dispatch_task(reply.value)
+            td = self.tasks_spec[reply.channel]
+            async(self.dispatch_task(td, reply.value))
+
+    @coroutine
+    def check_for_reschedule(self):
+        # todo: allow different sleep time for each task
+        while self.is_running:
+            yield from asyncio.sleep(self.sleep_time)
+            for td in self.tasks_spec.values():
+                async(self.check_reschedule(td))
+
+    @coroutine
+    def check_reschedule(self, td: TaskDef):
+
+        ft = self.loop.run_in_executor(self.pool, td.reschedule_fn)
+
+        to_reshedule = yield from ft
+
+
+
+    @coroutine
+    def work_cycle(self):
+
+        while self.is_running:
+            yield from asyncio.sleep
+
+
+
+    @coroutine
+    def stop(self):
+        log.info("Stopping async runner ...")
+        self.is_running = False
+
+        self.pool.shutdown(wait=True)
+        self.loop.stop()
+
+        log.info("Finished ")
+
+    def attach_signal_handlers(self):
+        for sig_name in ('SIGINT', 'SIGTERM'):
+            self.loop.add_signal_handler(
+                getattr(signal, sig_name),
+                lambda: async(self.stop()))
+
+
+
+
+
+    def start(self):
+        self.attach_signal_handlers()
+        self.is_running = True

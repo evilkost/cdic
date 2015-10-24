@@ -56,3 +56,35 @@ class OnDemandTask(object):
         self.parser = parser or json_params_parser
         self.serializer = serializer or json_params_serializer
 
+
+class TaskDef(object):
+
+    """
+    Async Task Definition
+
+    :param channel: name of the redis pub-sub channel to listen
+    :param work_fn: Target function to execute on receiving particular message
+    :param on_success: Function to execute after success
+    :param on_error: Function to execute upon error
+    :param reschedule_fn: Function to check if same task should be executed again
+                          should return a list of pairs (*args, **kwargs), which would be
+                          passed to serializer
+
+    :param parser: Parser queue message into the `fn` parameters [msg -> (args, kwargs)]
+    :param serializer: Serialize the `fn` parameters [(args, kwargs) -> msg] into the queue message
+    """
+
+    def __init__(self, channel: str,
+                 work_fn: callable,
+                 # on_success: callable, on_error: callable,
+                 reschedule_fn: callable,
+                 parser: callable=None, serializer: callable=None):
+        self.channel = channel
+        self.work_fn = work_fn
+        # self.on_success = on_success
+        # self.on_error = on_error
+        self.reschedule_fn = reschedule_fn
+
+        self.parser = parser or json_params_parser
+        self.serializer = serializer or json_params_serializer
+

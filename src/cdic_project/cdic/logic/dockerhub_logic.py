@@ -2,7 +2,10 @@
 import datetime
 import logging
 
+from requests import post
+
 from .. import db, app
+from ..models import Project
 from ..exceptions import DockerHubQueryError
 # from ..util.dockerhub import create_dockerhub_automated_build_repo, get_builds_history, run_dockerhub_build
 from ..logic.event_logic import create_project_event
@@ -14,16 +17,25 @@ from ..async.pusher import PREFIX, ctx_wrapper, schedule_task
 log = logging.getLogger(__name__)
 
 
+class DhLogic(object):
+
+    @classmethod
+    def trigger_build(cls, project: Project):
+        url = project.dh_build_trigger_url
+        post(url)
+        project.build_triggered_on = datetime.datetime.utcnow()
+        db.session.add(project)
+
+
+
 def create_dockerhub_repo(project_id: int):
     project = get_project_by_id(project_id)
 
-    create_dockerhub_automated_build_repo(project.repo_name)
+    if not app.dh_connector.create_project(project.repo_name):
+        return
 
     project.dockerhub_repo_exists = True
-
     pe = create_project_event(project, "Created dockerhub automated build")
-    if project.build_is_running:
-        project.build_is_running = False
 
     db.session.add_all([project, pe])
     db.session.commit()
@@ -106,6 +118,7 @@ def schedule_dh_status_updates(*args, **kwargs):
                   .format(project.repo_name))
         schedule_task(update_dockerhub_build_status_task, project.id)
 
+
 def reschedule_dockerhub_creation(*args, **kwargs):
     to_do = get_projects_to_create_dh()
     if not to_do:
@@ -114,6 +127,7 @@ def reschedule_dockerhub_creation(*args, **kwargs):
         log.debug("Re-scheduled dockerhub creation for: {}"
                   .format(project.repo_name))
         schedule_task(create_dockerhub_task, project.id)
+
 
 def reschedule_dockerhub_start_build(*args, **kwargs):
     to_do = get_projects_to_start_dh_build()

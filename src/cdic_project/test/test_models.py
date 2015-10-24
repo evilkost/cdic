@@ -21,28 +21,8 @@ def test_user(app):
     assert u1.name == name
 
 
-@pytest.fixture
-def users(app):
-    names = [
-        "foo",
-        "bar",
-        "john_smith"
-    ]
-
-    users = []
-    for name in names:
-        u = User(
-            username=name,
-            mail="{}@example.com".format(name)
-        )
-        users.append(u)
-    app.session.add_all(users)
-    app.session.commit()
-    return users
-
-
-def test_project(app, users):
-    u1 = users[0]
+def test_project(app, f_users):
+    u1 = f_users[0]
     title = "test_1"
     p = Project(user=u1,
                 title=title)
@@ -53,3 +33,7 @@ def test_project(app, users):
     p_list = Project.query.filter(User.id == u1.id).all()
     assert len(p_list) == 1
     assert p_list[0].title == title
+
+
+
+
