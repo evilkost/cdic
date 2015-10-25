@@ -63,13 +63,6 @@ class BuildStatus(object):
         return "<BS: {} id: {}, status: {}>".format(self.repo_name, self.build_id, self.status)
 
 
-    class ScriptResult(object):
-
-        def __init__(self, is_ok: bool, data: dict=None):
-            self.is_ok = is_ok
-            self.data = data
-
-
 class AbstractDhConnector(metaclass=ABCMeta):
 
     def get_build_info(self, repo_name: str, build_id: str) -> BuildInfo or None:
@@ -209,7 +202,9 @@ class DhConnector(AbstractDhConnector):
         if result.is_ok:
             return result.data["trigger_url"]
         else:
-            raise DockerHubQueryError(msg="Unable to get trigger url for project `{}`".format(repo_name))
+            log.error("Unable to get trigger url for project `{}`".format(repo_name))
+            return None
+            # raise DockerHubQueryError(msg="Unable to get trigger url for project `{}`".format(repo_name))
 
     def fetch_builds_status(self, repo_name: str) -> Iterable[BuildStatus]:
         url = "https://hub.docker.com/r/{}/{}/builds/".format(

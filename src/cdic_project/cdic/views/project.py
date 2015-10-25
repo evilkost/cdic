@@ -7,6 +7,7 @@ from werkzeug.utils import redirect
 
 
 # from app.views.copr import log
+from ..action import create_gh_repo_task, run_build_async
 
 log = logging.getLogger(__name__)
 
@@ -21,9 +22,10 @@ from ..forms.copr import CoprSearchLinkForm, CoprLinkAddForm
 from ..views.auth import login_required
 from ..logic.copr_logic import get_link_by_id, create_link, check_link_exists
 from ..logic.user_logic import get_user_by_name
-from ..actions.build import schedule_build
+# from ..actions.build import schedule_build
+from ..async.pusher import schedule_task_async
 from ..logic.project_logic import add_project_from_form, get_projects_by_user, \
-    get_project_by_id, update_project_from_form, update_patched_dockerfile, get_project_by_title
+    get_project_by_id, update_project_from_form, update_patched_dockerfile, get_project_by_title, ProjectLogic
 from ..logic.event_logic import create_project_event
 from ..util.copr import search_coprs, check_copr_existence
 from ..forms.project import ProjectForm, ProjectCreateForm, delete_form_factory
@@ -85,6 +87,20 @@ def create_handle():
         return create_view(form=form)
 
 
+@project_bp.route("/u/<username>/p/<title>/init_repos", methods=["GET", "POST"])
+@login_required
+def init_repos(username, title):
+    user = get_user_by_name(username)
+    project = get_project_by_title(user, title)
+
+    project.check_editable_by(g.user)
+
+    schedule_task_async(create_gh_repo_task, project.id)
+
+    flash("Repo creation scheduled", "success")
+    return redirect(url_for("project.details", username=project.user.username, title=project.title))
+
+
 @project_bp.route("/u/<username>/p/<title>/start_build", methods=["GET", "POST"])
 @login_required
 def start_build(username, title):
@@ -92,11 +108,12 @@ def start_build(username, title):
     project = get_project_by_title(user, title)
 
     project.check_editable_by(g.user)
-    if project.build_is_running:
-        flash("Build request is already being processed, please wait", "danger")
-        return redirect(url_for("project.details", username=project.user.username, title=project.title))
+    # if project.build_is_running:
+    #     flash("Build request is already being processed, please wait", "danger")
+    #     return redirect(url_for("project.details", username=project.user.username, title=project.title))
 
-    schedule_build(project)
+    # schedule_build(project)
+    run_build_async(project)
     flash("Build scheduled", "success")
     return redirect(url_for("project.details", username=project.user.username, title=project.title))
 

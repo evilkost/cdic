@@ -25,7 +25,19 @@ class DhLogic(object):
         post(url)
         project.build_triggered_on = datetime.datetime.utcnow()
         db.session.add(project)
+        # todo: send action
 
+    @classmethod
+    def set_dh_created(cls, p: Project):
+        p.github_repo_exists = True
+        pe = create_project_event(p, "Created dockerhub automated build")
+        db.session.add_all([p, pe])
+
+    @classmethod
+    def set_build_trigger(cls, p: Project, trigger: str):
+        p.dh_build_trigger_url = trigger
+        pe = create_project_event(p, "Obtained dh build trigger")
+        db.session.add_all([p, pe])
 
 
 def create_dockerhub_repo(project_id: int):

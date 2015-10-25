@@ -40,11 +40,10 @@ class GhLogic(object):
         pe = create_project_event(project, "New version pushed to github")
         db.session.add_all([pe, project])
 
+    @classmethod
+    def set_github_repo_created(cls, project: Project):
+        if not project.github_repo_exists:
+            project.github_repo_exists = True
 
-def set_github_repo_created(project: Project):
-    if not project.github_repo_exists:
-        project.github_repo_exists = True
-
-        pe = create_project_event(project, "Created github repo")
-        db.session.add_all([project, pe])
-        db.session.commit()
+            pe = create_project_event(project, "Created github repo")
+            db.session.add_all([project, pe])

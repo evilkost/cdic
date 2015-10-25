@@ -13,7 +13,7 @@ PREFIX = "cdic::"
 def ctx_wrapper(fn):
     def wrapped(*args, **kwargs):
         with app.app_context():
-            fn(*args, **kwargs)
+            return fn(*args, **kwargs)
     return wrapped
 
 

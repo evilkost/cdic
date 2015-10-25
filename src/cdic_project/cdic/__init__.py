@@ -31,6 +31,7 @@ db = SQLAlchemy()
 db.init_app(app)
 
 app.dh_connector = DhConnector(app.config)
+""":type:cdic_project.cdic.util.DhConnector"""
 
 from .filters import time_ago
 

@@ -303,22 +303,22 @@ class JobState(object):
     DONE = "done"
 
 
-class Job(db.Model):
-
-    __tablename__ = "task"
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    # see JobStates
-    state = db.Column(db.String(31), nullable=False)
-    name = db.Column(db.String(31), nullable=False)
-
-    # in seconds
-    max_execution_time = db.Column(db.Integer, default=300)
-    max_retries = db.Column(db.Integer, default=3)
-    priority = db.Column(db.Integer, default=0)  # 0 - lowest
-
-    created_on = db.Column(db.DateTime, default=db.func.now())
-    taken_on = db.Column(db.DateTime)
-
-    retry_count = db.Column(db.Integer, default=0)
+# class Job(db.Model):
+#
+#     __tablename__ = "task"
+#
+#     id = db.Column(db.Integer, primary_key=True)
+#
+#     # see JobStates
+#     state = db.Column(db.String(31), nullable=False)
+#     name = db.Column(db.String(31), nullable=False)
+#
+#     # in seconds
+#     max_execution_time = db.Column(db.Integer, default=300)
+#     max_retries = db.Column(db.Integer, default=3)
+#     priority = db.Column(db.Integer, default=0)  # 0 - lowest
+#
+#     created_on = db.Column(db.DateTime, default=db.func.now())
+#     taken_on = db.Column(db.DateTime)
+#
+#     retry_count = db.Column(db.Integer, default=0)

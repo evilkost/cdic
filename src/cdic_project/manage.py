@@ -7,19 +7,22 @@ import logging
 
 import flask
 from flask_script import Manager, Command, Option, Group
-from app.logic.project_logic import process_pending_deletes
 
-from cdic.util import setup_logging
 
-from app.logic.build_logic import run_build_task
-from app.logic.dockerhub_logic import create_dockerhub_task, update_dockerhub_build_status_task, \
+from cdic_project.cdic.logic.project_logic import process_pending_deletes
+
+from cdic_project.util import setup_logging
+
+# from cdic_project.cdic.logic.build_logic import run_build_task
+from cdic_project.cdic.logic.dockerhub_logic import create_dockerhub_task, update_dockerhub_build_status_task, \
     schedule_dh_status_updates, reschedule_dockerhub_creation, reschedule_dockerhub_start_build, \
     start_dockerhub_build_task
-from app import app, db
-from app.logic.build_logic import reschedule_stall_builds
-from app.async.runner import Runner
-from app.async.pusher import ctx_wrapper
-
+from cdic_project.cdic import app, db
+# from cdic_project.cdic.logic.build_logic import reschedule_stall_builds
+from cdic_project.cdic.async.runner import Runner, RunnerAlt
+from cdic_project.cdic.async.pusher import ctx_wrapper
+from cdic_project.cdic.action import create_gh_repo_task, create_dh_repo_task, fetch_build_trigger_task, \
+    run_build_async_task
 
 manager = Manager(app)
 
@@ -85,31 +88,38 @@ class RunAsyncTasks(Command):
     def run(self):
         setup_logging(app.config["ASYNC_LOG"])
 
-        # logging.getLogger("app.util.dockerhub").setLevel(logging.INFO)
-        logging.getLogger("app.async.runner").setLevel(logging.INFO)
-        # logging.getLogger("app.logic.build_logic").setLevel(logging.INFO)
+        # logging.getLogger("cdic_project.cdic.util.dockerhub").setLevel(logging.INFO)
+        logging.getLogger("cdic_project.cdic.async.runner").setLevel(logging.INFO)
+        # logging.getLogger("cdic_project.cdic.logic.build_logic").setLevel(logging.INFO)
 
-        r = Runner(app)
+        r = RunnerAlt(app)
 
-        r.add_periodic_task("Reschedule build task", ctx_wrapper(reschedule_stall_builds), 200)
-        r.add_periodic_task("Schedule dh status update task",
-                            ctx_wrapper(schedule_dh_status_updates), 200)
-        r.add_periodic_task("Reschedule failed dockerhub creation task",
-                            ctx_wrapper(reschedule_dockerhub_creation), 120)
-        r.add_periodic_task("Reschedule dockerhub start build task",
-                            ctx_wrapper(reschedule_dockerhub_start_build), 40)
-        r.add_periodic_task("Periodically process delete project requests",
-                            ctx_wrapper(process_pending_deletes), 40)
+        r.register_task(create_gh_repo_task)
+        r.register_task(create_dh_repo_task)
+        r.register_task(fetch_build_trigger_task)
+        r.register_task(run_build_async_task)
 
-        all_async_tasks = [
-            run_build_task,
-            create_dockerhub_task,
-            update_dockerhub_build_status_task,
-            start_dockerhub_build_task,
-        ]
-
-        for task in all_async_tasks:
-            r.add_on_demand_task(task)
+        # r = Runner(app)
+        #
+        # r.add_periodic_task("Reschedule build task", ctx_wrapper(reschedule_stall_builds), 200)
+        # r.add_periodic_task("Schedule dh status update task",
+        #                     ctx_wrapper(schedule_dh_status_updates), 200)
+        # r.add_periodic_task("Reschedule failed dockerhub creation task",
+        #                     ctx_wrapper(reschedule_dockerhub_creation), 120)
+        # r.add_periodic_task("Reschedule dockerhub start build task",
+        #                     ctx_wrapper(reschedule_dockerhub_start_build), 40)
+        # r.add_periodic_task("Periodically process delete project requests",
+        #                     ctx_wrapper(process_pending_deletes), 40)
+        #
+        # all_async_tasks = [
+        #     run_build_task,
+        #     create_dockerhub_task,
+        #     update_dockerhub_build_status_task,
+        #     start_dockerhub_build_task,
+        # ]
+        #
+        # for task in all_async_tasks:
+        #     r.add_on_demand_task(task)
 
         r.start()
 

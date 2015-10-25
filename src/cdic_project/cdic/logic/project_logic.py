@@ -16,7 +16,6 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from .. import app, db, git_store
 
-
 from ..util.github import GhClient
 from ..constants import SourceType, EventType
 from ..exceptions import PatchDockerfileException, FailedToFindProjectByDockerhubName, DockerHubQueryError
@@ -65,8 +64,8 @@ class ProjectLogic(object):
 
     @classmethod
     def get_projects_to_run_build_again(cls) -> List[Project]:
-        delay = datetime.timedelta(600)  # seconds, todo: move to config
-        old_enough = datetime.datetime.utcnow() - datetime.timedelta(delay)
+        delay = datetime.timedelta(seconds=600)  # seconds, todo: move to config
+        old_enough = datetime.datetime.utcnow() - delay
         projects = (
             cls.query_all_ready_projects()
             .filter(Project.build_requested_on.is_not(None))
@@ -76,6 +75,42 @@ class ProjectLogic(object):
                 Project.build_triggered_on < Project.build_requested_on
             ))
         ).all()
+        return projects
+
+    @classmethod
+    def get_projects_to_create_gh_repo(cls) -> List[Project]:
+        delay = datetime.timedelta(seconds=600)  # seconds, todo: move to config
+        old_enough = datetime.datetime.utcnow() - delay
+        projects = (
+            Project.query
+            .filter(Project.created_on < old_enough)
+            .filter(Project.github_repo_exists.is_(False))
+        ).all()
+
+        return projects
+
+    @classmethod
+    def get_projects_to_create_dh_repo(cls) -> List[Project]:
+        delay = datetime.timedelta(seconds=600)  # seconds, todo: move to config
+        old_enough = datetime.datetime.utcnow() - delay
+        projects = (
+            Project.query
+            .filter(Project.created_on < old_enough)
+            .filter(Project.dockerhub_repo_exists.is_(False))
+        ).all()
+
+        return projects
+
+    @classmethod
+    def get_projects_to_fetch_build_trigger(cls) -> List[Project]:
+        delay = datetime.timedelta(seconds=600)  # seconds, todo: move to config
+        old_enough = datetime.datetime.utcnow() - delay
+        projects = (
+            Project.query
+            .filter(Project.created_on < old_enough)
+            .filter(Project.dh_build_trigger_url.isnot(None))
+        ).all()
+
         return projects
 
     @classmethod
@@ -118,6 +153,7 @@ class ProjectLogic(object):
             return True
         else:
             return p.build_triggered_on < p.build_requested_on
+
 
 
 

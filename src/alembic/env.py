@@ -19,8 +19,8 @@ import sys
 
 sys.path.append(os.getcwd())
 
-from cdic.app import db, app
-from cdic.app.models import *
+# from cdic_project.cdic import db, app
+from cdic_project.cdic.models import *
 target_metadata = db.metadata
 config.set_main_option("sqlalchemy.url", app.config["SQLALCHEMY_DATABASE_URI"])
 print(app.config["SQLALCHEMY_DATABASE_URI"])
