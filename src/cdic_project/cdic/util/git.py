@@ -46,8 +46,8 @@ class GitStore(object):
 
         self.r = None
 
-    def repo_path(self, username, projectname) -> str:
-        return os.path.join(self.base_path, username, projectname)
+    def repo_path(self, username: str, projectname: str) -> str:
+        return os.path.join(self.base_path, username.lower(), projectname.lower())
 
     def clean(self, username, projectname):
         repo = self.repo_path(username, projectname)
@@ -65,6 +65,9 @@ class GitStore(object):
         repo = self.repo_path(username, projectname)
         self.check_git_exists(repo)
         return Repo(repo)
+
+    def remove_local(self, username, projectname):
+        shutil.rmtree(self.repo_path(username, projectname))
 
     # def add_remote_by_name(self, username, projectname, remote_git_url, remote_name):
     #     repo = self.get_existing_repo(username, projectname)
@@ -147,4 +150,5 @@ class GitStore(object):
     def create_dir(repo_path):
         if not os.path.exists(repo_path):
             os.makedirs(repo_path)
+
 

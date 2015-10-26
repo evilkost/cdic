@@ -15,6 +15,7 @@ from sqlalchemy.sql import true, or_, false, and_
 from sqlalchemy.orm.exc import NoResultFound
 
 from .. import app, db, git_store
+from cdic.util.git import AnotherRepoExists
 
 from ..util.github import GhClient
 from ..constants import SourceType, EventType
@@ -31,7 +32,7 @@ class ProjectLogic(object):
     @classmethod
     def get_project_by_id_safe(
             cls, project_id: int,
-            hide_removed_project: bool=True) -> Project or None:
+            hide_removed_project: bool=True) -> Project:  # or None
 
         try:
             project = cls.query_project_by_id(project_id).one()
@@ -68,7 +69,7 @@ class ProjectLogic(object):
         old_enough = datetime.datetime.utcnow() - delay
         projects = (
             cls.query_all_ready_projects()
-            .filter(Project.build_requested_on.is_not(None))
+            .filter(Project.build_requested_on.isnot(None))
             .filter(Project.build_requested_on < old_enough)
             .filter(or_(
                 Project.build_triggered_on.is_(None),
@@ -103,13 +104,16 @@ class ProjectLogic(object):
 
     @classmethod
     def get_projects_to_fetch_build_trigger(cls) -> List[Project]:
-        delay = datetime.timedelta(seconds=600)  # seconds, todo: move to config
+        delay = datetime.timedelta(seconds=60)  # seconds, todo: move to config
         old_enough = datetime.datetime.utcnow() - delay
-        projects = (
+        # import ipdb; ipdb.set_trace()
+        query = (
             Project.query
-            .filter(Project.created_on < old_enough)
-            .filter(Project.dh_build_trigger_url.isnot(None))
-        ).all()
+            # .filter(Project.created_on < old_enough)
+            .filter(Project.dockerhub_repo_exists.is_(True))
+            .filter(Project.dh_build_trigger_url.is_(None))
+        )
+        projects = query.all()
 
         return projects
 
@@ -154,7 +158,32 @@ class ProjectLogic(object):
         else:
             return p.build_triggered_on < p.build_requested_on
 
+    @classmethod
+    def init_local_repo(cls, project: Project):
+        # TODO: this function should be placed outside from Logic
+        log.info("going to init local repo")
+        if project.source_mode == SourceType.LOCAL_TEXT:
+            try:
+                repo = git_store.init_local(project.user.username, project.title)
+            except AnotherRepoExists:
+                return
 
+            git_store.add_remote(repo, project.github_push_url)
+            open(os.path.join(repo.working_dir, "Dockerfile"), "wb").close()  # touch Dockerfile
+            git_store.initial_commit(repo, ["Dockerfile"])
+
+            project.local_repo_exists = True
+
+            pe = create_project_event(project, "Created local repo")
+            db.session.add_all([pe, project])
+
+        else:
+            raise NotImplementedError("Init of local repo for source mode: {} "
+                                      "not implemented".format(project.source_mode))
+
+    @classmethod
+    def get_projects_to_delete(cls):
+        return Project.query.filter(Project.delete_requested_on.isnot(None)).all()
 
 
 def get_all_projects_query() -> Query:

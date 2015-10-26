@@ -29,6 +29,7 @@ class GhClient(object):
             method="post",
         )
         log.info("< {}".format(response))
+        return True
         # TODO: check response code
 
     def delete_repo(self, repo_name):
@@ -37,6 +38,8 @@ class GhClient(object):
             method="delete"
         )
         log.info("< {}".format(response))
+        return True
+        # TODO: check response code
 
 
 

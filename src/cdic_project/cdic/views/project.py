@@ -7,7 +7,7 @@ from werkzeug.utils import redirect
 
 
 # from app.views.copr import log
-from ..action import create_gh_repo_task, run_build_async
+from ..action import create_gh_repo_task, run_build_async, delete_projects_task
 
 log = logging.getLogger(__name__)
 
@@ -82,6 +82,7 @@ def create_handle():
         event = create_project_event(project, "Created")
         db.session.add_all([project, event])
         db.session.commit()
+        schedule_task_async(create_gh_repo_task, project.id)
         return redirect(url_for("project.details", username=project.user.username, title=project.title))
     else:
         return create_view(form=form)
@@ -159,6 +160,7 @@ def delete(username, title):
                                   event_type=EventType.DELETE_REQUESTED)
         db.session.add_all([project, ev])
         db.session.commit()
+        schedule_task_async(delete_projects_task, project.id)
 
     return render_template("project/delete.html", project=project,
                            form=form, project_delete_page=True)

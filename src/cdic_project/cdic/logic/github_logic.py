@@ -47,3 +47,10 @@ class GhLogic(object):
 
             pe = create_project_event(project, "Created github repo")
             db.session.add_all([project, pe])
+
+    @classmethod
+    def set_github_repo_deleted(cls, project: Project):
+        project.github_repo_exists = False
+
+        pe = create_project_event(project, "Deleted github repo")
+        db.session.add_all([project, pe])

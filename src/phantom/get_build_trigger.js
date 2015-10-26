@@ -44,10 +44,12 @@ var activate_selector = x("//button[text()='Activate']");
 var deactivate_selector = x("//button[text()='Deactivate']");
 var trigger_input_selector = x("(//input[contains(@class, 'Trigger')])[2]");
 casper.thenOpen(builds_conf_url, function(){
+    casper.wait(3000);
     casper.click(activate_selector)
 });
 
 casper.waitForSelector(deactivate_selector, function(){
+    casper.wait(3000);
     var trigger_url = casper.getElementInfo(trigger_input_selector).attributes["value"];
     var result = {
         "repo_name": repo_name,
