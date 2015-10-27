@@ -23,12 +23,6 @@ def test_get_project_by_id_safe(app, f_projects):
         p_1.id, hide_removed=False).title == p_1.title
 
 
-def test_get_projects_to_create_gh_repo(app, f_projects):
-
-    res = ProjectLogic.get_projects_to_create_gh_repo()
-    pprint(res)
-
-
 def test_get_projects_to_delete(app, f_projects):
 
     res = ProjectLogic.get_projects_to_delete()

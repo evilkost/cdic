@@ -88,9 +88,9 @@ class RunnerAlt(object):
     def check_reschedule(self, td: TaskDef):
         ft = self.loop.run_in_executor(self.pool, td.reschedule_fn)
         to_reschedule = yield from ft
-        log.info("check for pending reschedule for task: {}, items to resch:{}"
-                 .format(td.channel, to_reschedule))
-        # import ipdb; ipdb.set_trace()
+        log.debug("Check for pending reschedule for task: {}, items:{}"
+                  .format(td.channel, to_reschedule))
+
         if to_reschedule:
             for args, kwargs in to_reschedule:
                 schedule_task_async(td, *args, **kwargs)

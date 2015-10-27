@@ -7,7 +7,7 @@ from werkzeug.utils import redirect
 
 
 # from app.views.copr import log
-from ..action import create_gh_repo_task, run_build_async, delete_projects_task
+from ..action import run_build_async, delete_projects_task, create_project_repos_task
 
 log = logging.getLogger(__name__)
 
@@ -90,7 +90,7 @@ def create_handle():
             event = create_project_event(project, "Created")
             db.session.add_all([project, event])
             db.session.commit()
-            schedule_task_async(create_gh_repo_task, project.id)
+            schedule_task_async(create_project_repos_task, project.id)
             return redirect(url_for("project.details", username=project.user.username, title=project.title))
     else:
         return create_view(form=form)
@@ -104,7 +104,7 @@ def init_repos(username, title):
 
     project.check_editable_by(g.user)
 
-    schedule_task_async(create_gh_repo_task, project.id)
+    schedule_task_async(create_project_repos_task, project.id)
 
     flash("Repo creation scheduled", "success")
     return redirect(url_for("project.details", username=project.user.username, title=project.title))

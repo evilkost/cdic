@@ -89,87 +89,58 @@ query_builds_status = TaskDef(
 )
 
 
-def create_gh_repo(project_id: int):
+def create_project_repos(project_id: int):
     p = ProjectLogic.get_project_by_id_safe(project_id)
-    if p:
-        repo_name = p.repo_name
-        if not p.github_repo_exists:
-            log.info("Creating github repo: {}".format(repo_name))
-            client = GhClient()
-            client.create_repo(repo_name)
-            GhLogic.set_github_repo_created(p)
+    if not p:
+        return
+    repo_name = p.repo_name
+    if not p.github_repo_exists:
+        log.info("Creating github repo: {}".format(repo_name))
+        client = GhClient()
+        client.create_repo(repo_name)
+        # todo: check if gh repo was created
+        GhLogic.set_github_repo_created(p)
+        db.session.commit()
+    else:
+        log.info("Github repo {} already exists".format(repo_name))
+
+    if not p.dockerhub_repo_exists:
+        log.info("Creating dockerhub repo: {}".format(repo_name))
+        if dh_connector.create_project(repo_name):
+            DhLogic.set_dh_created(p)
             db.session.commit()
+            log.info("Dockerhub repo created: {}".format(repo_name))
         else:
-            log.info("Github repo {} already exists".format(repo_name))
+            return
+    else:
+        log.info("Dockerhub repo {} already exists".format(repo_name))
 
-        schedule_task_async(create_dh_repo_task, project_id)
+    if p.dh_build_trigger_url is None:
+        log.info("Fetching dockerhub build trigger url: {}".format(repo_name))
+        mb_trigger = dh_connector.get_build_trigger_url(repo_name)
+        if mb_trigger:
+            DhLogic.set_build_trigger(p, mb_trigger)
+            db.session.commit()
+            log.info("Obtained dh build trigger for: {}"
+                     .format(repo_name))
+    else:
+        log.info("Build trigger for repo {} is already fetched".format(repo_name))
 
+    if p.build_requested_on is not None:
+        schedule_task_async(run_build_async_task, project_id)
 
-create_gh_repo_task = TaskDef(
-    channel="create_gh_repo",
-    work_fn=ctx_wrapper(create_gh_repo),
+create_project_repos_task = TaskDef(
+    channel="create_project_repos",
+    work_fn=ctx_wrapper(create_project_repos),
     reschedule_fn=ctx_wrapper(
-        lambda: pack_p_ids(ProjectLogic.get_projects_to_create_gh_repo())
-    )
-)
-
-
-def create_dh_repo(project_id: int):
-    p = ProjectLogic.get_project_by_id_safe(project_id)
-    if p:
-        repo_name = p.repo_name
-        if not p.dockerhub_repo_exists:
-            log.info("Creating dockerhub repo: {}".format(repo_name))
-            if dh_connector.create_project(repo_name):
-                DhLogic.set_dh_created(p)
-                db.session.commit()
-                log.info("Dockerhub repo created: {}".format(repo_name))
-                schedule_task_async(fetch_build_trigger_task, project_id)
-        else:
-            schedule_task_async(fetch_build_trigger_task, project_id)
-            log.info("Dockerhub repo {} already exists".format(repo_name))
-
-
-create_dh_repo_task = TaskDef(
-    channel="create_dh_repo",
-    work_fn=ctx_wrapper(create_dh_repo),
-    reschedule_fn=ctx_wrapper(
-        lambda: pack_p_ids(ProjectLogic.get_projects_to_create_dh_repo())
-    ),
-)
-
-
-def get_dh_trigger_url(project_id: int):
-    p = ProjectLogic.get_project_by_id_safe(project_id)
-    if p:
-        repo_name = p.repo_name
-        if p.dh_build_trigger_url is None:
-            log.info("Fetching dockerhub build trigger url: {}".format(repo_name))
-            mb_trigger = dh_connector.get_build_trigger_url(repo_name)
-            if mb_trigger:
-                DhLogic.set_build_trigger(p, mb_trigger)
-                db.session.commit()
-                log.info("Obtained dh build trigger for: {}"
-                         .format(repo_name))
-
-                if p.build_requested_on is not None:
-                    schedule_task_async(run_build_async_task, project_id)
-
-        else:
-            log.info("Build trigger for repo {} is already fetched".format(repo_name))
-
-fetch_build_trigger_task = TaskDef(
-    channel="fetch_build_trigger",
-    work_fn=ctx_wrapper(get_dh_trigger_url),
-    reschedule_fn=ctx_wrapper(
-        lambda: pack_p_ids(ProjectLogic.get_projects_to_fetch_build_trigger())
+        lambda: pack_p_ids(
+            ProjectLogic.get_projects_repo_creation_not_done())
     )
 )
 
 
 def delete_project(project_id: int):
     p = ProjectLogic.get_project_by_id_safe(project_id, hide_removed=False)
-    # import ipdb; ipdb.set_trace()
     if p is None:
         return
     if p.delete_requested_on is None:
@@ -195,6 +166,11 @@ def delete_project(project_id: int):
         git_store.remove_local(p.user.username, p.title)
         p.local_repo_exists = False
         db.session.commit()
+
+    ProjectLogic.delete_project_with_events(p)
+    db.session.commit()
+
+    log.info("Project id #{} is removed".format(project_id))
 
 
 delete_projects_task = TaskDef(

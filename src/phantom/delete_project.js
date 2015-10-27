@@ -30,7 +30,7 @@ var github_username = data.github_username;
 // scenario start
 
 casper.start('https://hub.docker.com/login/', function() {
-    this.capture("000-login_page.png");
+//    this.capture("000-login_page.png");
 });
 
 var button_create_selector = x("((//form)[2]//input)[3]");

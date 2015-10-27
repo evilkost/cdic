@@ -198,13 +198,17 @@ class DhConnector(AbstractDhConnector):
 
     def get_build_trigger_url(self, repo_name: str) -> str or None:
         log.info("Getting build trigger url: {}".format(repo_name))
-        result = self.driver.run_script("get_build_trigger.js", {"repo_name": repo_name})
-        if result.is_ok:
-            return result.data["trigger_url"]
-        else:
-            log.error("Unable to get trigger url for project `{}`".format(repo_name))
-            return None
-            # raise DockerHubQueryError(msg="Unable to get trigger url for project `{}`".format(repo_name))
+        result = None
+        attempt = 0
+        while result is None and attempt < 2:
+            result = self.driver.run_script("get_build_trigger.js", {"repo_name": repo_name})
+            if result.is_ok:
+                return result.data["trigger_url"]
+            attempt += 1
+
+        log.error("Unable to get trigger url for project `{}`".format(repo_name))
+        return None
+        # raise DockerHubQueryError(msg="Unable to get trigger url for project `{}`".format(repo_name))
 
     def fetch_builds_status(self, repo_name: str) -> Iterable[BuildStatus]:
         url = "https://hub.docker.com/r/{}/{}/builds/".format(

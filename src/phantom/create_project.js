@@ -78,7 +78,7 @@ var empty_description_selector = x("//p[text()='This field is required.']");
 casper.waitForSelector(create_button_selector, function() {
     this.wait(1000);
     this.click(create_button_selector);
-    this.captureSelector("104_after_submit.png", create_button_selector);
+//    this.captureSelector("104_after_submit.png", create_button_selector);
 });
 
 casper.then(function() {

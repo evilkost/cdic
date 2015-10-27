@@ -101,37 +101,12 @@ class ProjectLogic(object):
         return projects
 
     @classmethod
-    def get_projects_to_create_gh_repo(cls) -> List[Project]:
-        delay = datetime.timedelta(seconds=60)  # seconds, todo: move to config
-        old_enough = arrow.utcnow() - delay
-        projects = (
-            Project.query
-            .filter(Project.created_on < old_enough)
-            .filter(Project.github_repo_exists.is_(False))
-        ).all()
-
-        return projects
-
-    @classmethod
-    def get_projects_to_create_dh_repo(cls) -> List[Project]:
-        delay = datetime.timedelta(seconds=60)  # seconds, todo: move to config
-        old_enough = arrow.utcnow() - delay
-        projects = (
-            Project.query
-            .filter(Project.created_on < old_enough)
-            .filter(Project.dockerhub_repo_exists.is_(False))
-        ).all()
-
-        return projects
-
-    @classmethod
-    def get_projects_to_fetch_build_trigger(cls) -> List[Project]:
+    def get_projects_repo_creation_not_done(cls) -> List[Project]:
         delay = datetime.timedelta(seconds=60)  # seconds, todo: move to config
         old_enough = arrow.utcnow() - delay
         query = (
             Project.query
             .filter(Project.created_on < old_enough)
-            .filter(Project.dockerhub_repo_exists.is_(True))
             .filter(Project.dh_build_trigger_url.is_(None))
         )
         projects = query.all()
@@ -276,3 +251,9 @@ class ProjectLogic(object):
         project.patched_dockerfile = patched
         project.patched_dockerfile_on = arrow.utcnow()
         return project
+
+    @classmethod
+    def delete_project_with_events(cls, p: Project):
+        for pe in p.history_events:
+            db.session.delete(pe)
+        db.session.delete(p)
