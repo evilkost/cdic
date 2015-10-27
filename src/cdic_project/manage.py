@@ -78,6 +78,10 @@ class RunAsyncTasks(Command):
     def run(self):
         setup_logging(app.config["ASYNC_LOG"])
 
+
+        import sys
+        log.info("SYSPATH: {}".format(sys.path))
+
         # logging.getLogger("cdic_project.cdic.util.dockerhub").setLevel(logging.INFO)
         logging.getLogger("cdic_project.cdic.async.runner").setLevel(logging.INFO)
         # logging.getLogger("cdic_project.cdic.logic.build_logic").setLevel(logging.INFO)

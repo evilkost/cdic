@@ -5,8 +5,8 @@ from backports.typing import Iterable
 
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSON
-#from sqlalchemy_utils import ArrowType
-#import arrow
+from sqlalchemy_utils import ArrowType
+import arrow
 
 
 # VV todo: looks like it import DNS but py3 version should be dns
@@ -37,8 +37,8 @@ class User(db.Model):
     # optional timezone
     timezone = db.Column(db.String(50), nullable=True)
 
-    created_on = db.Column(db.DateTime, default=db.func.now())
-    updated_on = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+    created_on = db.Column(ArrowType, default=arrow.utcnow())
+    updated_on = db.Column(ArrowType, default=arrow.utcnow(), onupdate=arrow.utcnow())
 
     @property
     def name(self) -> str:
@@ -71,7 +71,7 @@ class ProjectEvent(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey("project.id"))
     project = db.relationship("Project", backref=db.backref("history_events", lazy="dynamic"))
 
-    created_on = db.Column(db.DateTime, default=db.func.now())
+    created_on = db.Column(ArrowType, default=arrow.utcnow())
 
     human_text = db.Column(db.Text)
 
@@ -93,32 +93,22 @@ class Project(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     user = db.relationship("User", backref=db.backref("projects", lazy="dynamic"))
 
-    created_on = db.Column(db.DateTime, default=db.func.now())
-    updated_on = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+    created_on = db.Column(ArrowType, default=arrow.utcnow())
+    updated_on = db.Column(ArrowType, default=arrow.utcnow(), onupdate=arrow.utcnow())
 
-    build_requested_on = db.Column(db.DateTime)  # time, when the user requested new build
-    build_triggered_on = db.Column(db.DateTime)  # time, when the service invoked dockerhub build trigger
+    build_requested_on = db.Column(ArrowType)  # time, when the user requested new build
+    build_triggered_on = db.Column(ArrowType)  # time, when the service invoked dockerhub build trigger
 
     # this variable define only "local" build process, after the user click on "Run build" and until
     # we push changes to github or create docker hub (for the first build)
     # build_is_running = db.Column(db.Boolean, default=False)
     local_repo_exists = db.Column(db.Boolean, default=False)
     patched_dockerfile = db.Column(db.Text)
-    patched_dockerfile_on = db.Column(db.DateTime)
+    patched_dockerfile_on = db.Column(ArrowType)
 
     # build_started_on = db.Column(db.DateTime)
-    local_repo_changed_on = db.Column(db.DateTime)
-    local_repo_pushed_on = db.Column(db.DateTime)
-
-    dockerhub_build_status = db.Column(db.String(32))
-    # here we use server time
-    dockerhub_build_status_updated_on_local_time = db.Column(db.DateTime)
-    # for the next two fields we use time stamps parsed from DockerHub pages
-    dockerhub_latest_build_started_on = db.Column(db.DateTime)
-    dockerhub_latest_build_updated_on = db.Column(db.DateTime)
-    # to click dockerhub "start build", using local time
-    dh_start_requested_on = db.Column(db.DateTime)
-    dh_start_done_on = db.Column(db.DateTime)
+    local_repo_changed_on = db.Column(ArrowType)
+    local_repo_pushed_on = db.Column(ArrowType)
 
     source_mode = db.Column(db.String(40), default=SourceType.LOCAL_TEXT,
                             server_default=SourceType.LOCAL_TEXT)
@@ -134,7 +124,7 @@ class Project(db.Model):
     dh_build_trigger_url = db.Column(db.Text)
 
     # set on delete requests, indicates that project going to be deleted
-    delete_requested_on = db.Column(db.DateTime, index=True)
+    delete_requested_on = db.Column(ArrowType, index=True)
 
     def is_build_request_in_progress(self) -> bool:
         if self.build_requested_on is None:
@@ -179,20 +169,6 @@ class Project(db.Model):
         return False
 
     @property
-    def is_dh_build_finished(self) -> bool:
-        if not self.dockerhub_repo_exists or \
-                self.local_repo_pushed_on is None or \
-                self.dockerhub_build_status is None or \
-                self.dockerhub_build_status_updated_on_local_time is None:
-            return False
-
-        if self.dockerhub_build_status.lower() in ["finished", "error"] and \
-                self.local_repo_pushed_on < self.dockerhub_build_status_updated_on_local_time:
-            return True
-        else:
-            return False
-
-    @property
     def repo_name(self) -> str:
         return '{}-{}'.format(self.user.username, self.title).lower()
 
@@ -235,20 +211,6 @@ class Project(db.Model):
     def recent_events(self) -> Iterable[ProjectEvent]:
         return self.history_events.order_by(ProjectEvent.created_on.desc())
 
-    # @property
-    # def show_build_in_progress(self) -> bool:
-    #     if not self.build_started_on:
-    #         return False
-    #     if self.delete_requested_on is not None:
-    #         return False
-    #     if not self.local_repo_pushed_on or not self.dockerhub_build_status_updated_on_local_time:
-    #         return True
-    #
-    #     if self.build_started_on > self.dockerhub_build_status_updated_on_local_time:
-    #         return True
-    #
-    #     return not self.is_dh_build_finished
-
     @property
     def should_start_dh_build(self) -> bool:
         if self.dh_start_requested_on:
@@ -267,6 +229,8 @@ class DhBuildInfo(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey("project.id"))
     project = db.relationship("Project", backref=db.backref("builds_info", lazy="dynamic"))
 
+    fetched_on = db.Column(ArrowType, default=arrow.utcnow())
+
     info = db.Column(JSON)
 
 
@@ -283,7 +247,7 @@ class LinkedCopr(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey("project.id"))
     project = db.relationship("Project", backref=db.backref("linked_coprs", lazy="dynamic"))
 
-    created_on = db.Column(db.DateTime, default=db.func.now())
+    created_on = db.Column(ArrowType, default=arrow.utcnow())
 
     coprname = db.Column(db.String(120))
     username = db.Column(db.String(120))

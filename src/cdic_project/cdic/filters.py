@@ -1,6 +1,8 @@
 # coding: utf-8
 
 import datetime
+from arrow import Arrow
+import arrow
 
 import pytz
 
@@ -27,10 +29,10 @@ from . import app
 
 
 @app.template_filter('time_ago')
-def time_ago(time_in: datetime) -> str:
+def time_ago(time_in: Arrow) -> str:
     """ returns string saying how long ago the time on input was
     """
-    now = datetime.datetime.utcnow()
+    now = arrow.utcnow()
     diff = now - time_in
     sec_diff = int(diff.total_seconds())
 

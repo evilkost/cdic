@@ -1,5 +1,6 @@
 # coding: utf-8
 import datetime
+from pprint import pprint
 import pytest
 
 from cdic_project.cdic.logic.project_logic import ProjectLogic
@@ -20,3 +21,15 @@ def test_get_project_by_id_safe(app, f_projects):
     assert ProjectLogic.get_project_by_id_safe(p_1.id) is None
     assert ProjectLogic.get_project_by_id_safe(
         p_1.id, hide_removed=False).title == p_1.title
+
+
+def test_get_projects_to_create_gh_repo(app, f_projects):
+
+    res = ProjectLogic.get_projects_to_create_gh_repo()
+    pprint(res)
+
+
+def test_get_projects_to_delete(app, f_projects):
+
+    res = ProjectLogic.get_projects_to_delete()
+    pprint(res)

@@ -5,6 +5,8 @@ import json
 import os
 import logging
 
+import arrow
+
 from backports.typing import Iterable, List
 from flask import abort
 from flask_wtf import Form
@@ -85,8 +87,8 @@ class ProjectLogic(object):
 
     @classmethod
     def get_projects_to_run_build_again(cls) -> List[Project]:
-        delay = datetime.timedelta(seconds=600)  # seconds, todo: move to config
-        old_enough = datetime.datetime.utcnow() - delay
+        delay = datetime.timedelta(seconds=60)  # seconds, todo: move to config
+        old_enough = arrow.utcnow() - delay
         projects = (
             cls.query_all_ready_projects()
             .filter(Project.build_requested_on.isnot(None))
@@ -100,8 +102,8 @@ class ProjectLogic(object):
 
     @classmethod
     def get_projects_to_create_gh_repo(cls) -> List[Project]:
-        delay = datetime.timedelta(seconds=600)  # seconds, todo: move to config
-        old_enough = datetime.datetime.utcnow() - delay
+        delay = datetime.timedelta(seconds=60)  # seconds, todo: move to config
+        old_enough = arrow.utcnow() - delay
         projects = (
             Project.query
             .filter(Project.created_on < old_enough)
@@ -112,8 +114,8 @@ class ProjectLogic(object):
 
     @classmethod
     def get_projects_to_create_dh_repo(cls) -> List[Project]:
-        delay = datetime.timedelta(seconds=600)  # seconds, todo: move to config
-        old_enough = datetime.datetime.utcnow() - delay
+        delay = datetime.timedelta(seconds=60)  # seconds, todo: move to config
+        old_enough = arrow.utcnow() - delay
         projects = (
             Project.query
             .filter(Project.created_on < old_enough)
@@ -125,7 +127,7 @@ class ProjectLogic(object):
     @classmethod
     def get_projects_to_fetch_build_trigger(cls) -> List[Project]:
         delay = datetime.timedelta(seconds=60)  # seconds, todo: move to config
-        old_enough = datetime.datetime.utcnow() - delay
+        old_enough = arrow.utcnow() - delay
         query = (
             Project.query
             .filter(Project.created_on < old_enough)
@@ -142,7 +144,7 @@ class ProjectLogic(object):
         if not silent:
             build_event = create_project_event(
                 project, "Started new build",
-                data_json=json.dumps({"build_requested_dt": datetime.datetime.utcnow().isoformat()}),
+                data_json=json.dumps({"build_requested_dt": arrow.utcnow().isoformat()}),
                 event_type=EventType.BUILD_REQUESTED
             )
             db.session.add(build_event)
@@ -272,5 +274,5 @@ class ProjectLogic(object):
                                       .format(project.source_mode))
 
         project.patched_dockerfile = patched
-        project.patched_dockerfile_on = datetime.datetime.utcnow()
+        project.patched_dockerfile_on = arrow.utcnow()
         return project

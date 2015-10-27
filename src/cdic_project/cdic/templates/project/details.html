@@ -87,53 +87,7 @@
               {% endif %}
             </dd>
 
-            <!--<dt>Local repo</dt>-->
-            <!--<dd> {{ project.local_repo_exists }}</dd>-->
 
-            {% if project.dockerhub_build_status and project.dockerhub_repo_exists %}
-            <dt>Dockerhub status</dt>
-
-            <dd>
-              <span class="label
-                {% if 'finished' in project.dockerhub_build_status|lower %}
-                  label-success
-                {% elif 'error' in project.dockerhub_build_status|lower %}
-                  label-danger
-                {% else %}
-                  label-info
-                {% endif %}
-
-              ">
-                {{ project.dockerhub_build_status}}
-              </span>
-
-            </dd>
-
-            <dt>Dockerhub updated</dt>
-            <dd>
-              {{ project.dockerhub_latest_build_updated_on }}
-            </dd>
-            {% endif %}
-
-            <!--<dt>DH build is finished</dt>-->
-            <!--&lt;!&ndash;<dd> {{ project.build_is_running }}</dd>&ndash;&gt;-->
-            <!--<dd> {{ project.is_dh_build_finished }}</dd>-->
-
-            <!--<dt>Build in progress</dt>-->
-            <!--<dd>{{ project.show_build_in_progress }}</dd>-->
-
-            <!--<dt>DH updated local time</dt>-->
-            <!--<dd>[{{ project.dockerhub_build_status_updated_on_local_time }}]</dd>-->
-            <!--<hr />-->
-            <!--{{ project.local_repo_pushed_on }}-->
-            <!--{% for k, v in project.__dict__.items() %}-->
-              <!--<dt>{{k}}</dt>-->
-              <!--<dd>{{v}}</dd>-->
-            <!--{% endfor %}-->
-            <!---->
-            <!---->
-            <!--<dt>Auto-build</dt>-->
-            <!--<dd>disabled</dd>-->
           </dl>
 
           {% if project.dockerhub_repo_exists %}
