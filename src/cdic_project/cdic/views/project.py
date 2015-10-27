@@ -24,8 +24,7 @@ from ..logic.copr_logic import get_link_by_id, create_link, check_link_exists
 from ..logic.user_logic import get_user_by_name
 # from ..actions.build import schedule_build
 from ..async.pusher import schedule_task_async
-from ..logic.project_logic import add_project_from_form, get_projects_by_user, \
-    get_project_by_id, update_project_from_form, update_patched_dockerfile, get_project_by_title, ProjectLogic
+from ..logic.project_logic import ProjectLogic
 from ..logic.event_logic import create_project_event
 from ..util.copr import search_coprs, check_copr_existence
 from ..forms.project import ProjectForm, ProjectCreateForm, delete_form_factory
@@ -39,11 +38,12 @@ project_bp = Blueprint("project", __name__)
 def list_by_user(username):
     try:
         owner = get_user_by_name(username)
+
         return render_template(
             "project/list.html",
             owner=owner,
             my_prj_btn_active=True,
-            project_list=get_projects_by_user(owner)
+            project_list=ProjectLogic.query_by_owner(username)
         )
 
     except NoResultFound:
@@ -52,22 +52,21 @@ def list_by_user(username):
 
 @project_bp.route("/projects/<project_id>/")
 def details_by_id(project_id):
-    project = get_project_by_id(int(project_id))
+    project = ProjectLogic.get_project_by_id(int(project_id))
     return redirect(url_for("project.details", username=project.user.username, title=project.title))
 
 
 @project_bp.route("/u/<username>/p/<title>/")
 def details(username, title):
     user = get_user_by_name(username)
-    project = get_project_by_title(user, title)
+    project = ProjectLogic.get_project_by_title(user, title)
     return render_template("project/details.html", project=project, project_info_page=True)
 
 
 @project_bp.route("/p/add", methods=["GET"])
 @login_required
 def create_view(form=None):
-    if not form:
-        form = ProjectCreateForm()
+    form = form or ProjectCreateForm()
     return render_template("project/add.html", form=form)
 
 
@@ -76,14 +75,23 @@ def create_view(form=None):
 def create_handle():
     form = ProjectCreateForm()
     if form.validate_on_submit():
-        project = add_project_from_form(g.user, form)
-        project.local_text = "FROM fedora:latest \n"
-        project.patched_dockerfile = ""
-        event = create_project_event(project, "Created")
-        db.session.add_all([project, event])
-        db.session.commit()
-        schedule_task_async(create_gh_repo_task, project.id)
-        return redirect(url_for("project.details", username=project.user.username, title=project.title))
+        if ProjectLogic.exists_for_user(g.user, form.title.data):
+            abort(400)
+            # todo: replace with exception raise
+        else:
+            project = Project(
+                user=g.user,
+                title=form.title.data,
+                source_mode=form.source_mode.data,
+            )
+
+            project.local_text = "FROM fedora:latest \n"
+            project.patched_dockerfile = ""
+            event = create_project_event(project, "Created")
+            db.session.add_all([project, event])
+            db.session.commit()
+            schedule_task_async(create_gh_repo_task, project.id)
+            return redirect(url_for("project.details", username=project.user.username, title=project.title))
     else:
         return create_view(form=form)
 
@@ -92,7 +100,7 @@ def create_handle():
 @login_required
 def init_repos(username, title):
     user = get_user_by_name(username)
-    project = get_project_by_title(user, title)
+    project = ProjectLogic.get_project_by_title(user, title)
 
     project.check_editable_by(g.user)
 
@@ -106,7 +114,7 @@ def init_repos(username, title):
 @login_required
 def start_build(username, title):
     user = get_user_by_name(username)
-    project = get_project_by_title(user, title)
+    project = ProjectLogic.get_project_by_title(user, title)
 
     project.check_editable_by(g.user)
     # if project.build_is_running:
@@ -123,18 +131,20 @@ def start_build(username, title):
 @login_required
 def edit(username, title):
     user = get_user_by_name(username)
-    project = get_project_by_title(user, title)
+    project = ProjectLogic.get_project_by_title(user, title)
 
     form = ProjectForm(obj=project)
 
     if request.method == "POST" and form.validate_on_submit():
         old_source_mode = project.source_mode
-        update_project_from_form(project, form)
+
+        project.local_text = form.local_text.data
+        project.git_url = form.git_url.data
 
         event = create_project_event(project, "Edited",
                                      data_json=json.dumps(form.data),
                                      event_type=EventType.PROJECT_EDITED)
-        update_patched_dockerfile(project)
+        ProjectLogic.update_patched_dockerfile(project)
         db.session.add_all([project, event])
         db.session.commit()
         flash("Project was altered", "success")
@@ -150,7 +160,7 @@ def edit(username, title):
 @login_required
 def delete(username, title):
     user = get_user_by_name(username)
-    project = get_project_by_title(user, title)
+    project = ProjectLogic.get_project_by_title(user, title)
 
     form = delete_form_factory(project)
     if request.method == "POST" and form.validate_on_submit():
@@ -170,7 +180,7 @@ def delete(username, title):
 @login_required
 def search_and_link(username, title):
     user = get_user_by_name(username)
-    project = get_project_by_title(user, title)
+    project = ProjectLogic.get_project_by_title(user, title)
 
     form_search = CoprSearchLinkForm()
     form_add = CoprLinkAddForm()
@@ -234,10 +244,10 @@ def search_and_link(username, title):
 @login_required
 def unlink(username, title, link_id):
     user = get_user_by_name(username)
-    project = get_project_by_title(user, title)
+    project = ProjectLogic.get_project_by_title(user, title)
     link = get_link_by_id(link_id)
     if link and link in project.linked_coprs:
-        update_patched_dockerfile(project)
+        ProjectLogic.update_patched_dockerfile(project)
         event = create_project_event(
             link.project,
             "Removed linked copr: {}/{}".format(link.username, link.coprname),

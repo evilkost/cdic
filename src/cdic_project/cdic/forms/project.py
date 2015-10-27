@@ -8,7 +8,7 @@ from wtforms.fields.html5 import URLField
 
 
 from ..models import Project
-from ..logic.project_logic import exists_for_user
+from ..logic.project_logic import ProjectLogic
 from ..constants import SourceType
 
 
@@ -23,7 +23,7 @@ class ProjectUniqueNameValidator(object):
         self.message = message
 
     def __call__(self, form, field):
-        existing = exists_for_user(g.user, field.data)
+        existing = ProjectLogic.exists_for_user(g.user, field.data)
         if existing:
             raise ValidationError(self.message.format(field.data))
 
@@ -57,6 +57,7 @@ class ProjectCreateForm(Form):
     source_mode = RadioField(SourceType.LOCAL_TEXT,
                              choices=[(x, x.replace("_", " ").capitalize()) for x in SourceType.get_all_options()],
                              default=SourceType.LOCAL_TEXT)
+
 
 class SameTextValidator(object):
 

@@ -7,7 +7,7 @@ from sqlalchemy.orm.query import Query
 
 from .. import db
 from ..logic.event_logic import create_project_event
-from ..logic.project_logic import update_patched_dockerfile
+from ..logic.project_logic import ProjectLogic
 from ..models import Project, User, LinkedCopr
 
 
@@ -34,7 +34,7 @@ def create_link(project: Project, username: str, coprname: str,) -> LinkedCopr:
         project, "Linked copr: {}/{}".format(username, coprname),
         event_type="created_link")
 
-    update_patched_dockerfile(project)
+    ProjectLogic.update_patched_dockerfile(project)
     db.session.add_all([link, event, project])
     return link
 

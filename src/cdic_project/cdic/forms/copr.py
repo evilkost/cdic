@@ -24,6 +24,7 @@ class CoprNameValidator(object):
         except ValueError:
             raise ValidationError(self.message.format(field.data))
 
+
 class CoprLinkAddForm(Form):
     copr_name = StringField(label="Enter copr in the format `copr_owner/copr_project`",
                             validators=[CoprNameValidator()])

@@ -19,4 +19,4 @@ def test_get_project_by_id_safe(app, f_projects):
 
     assert ProjectLogic.get_project_by_id_safe(p_1.id) is None
     assert ProjectLogic.get_project_by_id_safe(
-        p_1.id, hide_removed_project=False).title == p_1.title
+        p_1.id, hide_removed=False).title == p_1.title
