@@ -5,7 +5,7 @@ from pprint import pprint
 import arrow
 import pytest
 
-from cdic_project.cdic.models import DhBuildInfo
+from cdic_project.cdic.models import DhBuildInfo, Project
 from cdic_project.cdic.util.dockerhub import BuildStatus, BuildDetails
 from cdic_project.cdic.logic.project_logic import ProjectLogic
 
@@ -106,6 +106,13 @@ def test_update_build_status(app, f_projects):
     assert bi.id == bs.build_id
     assert bi.status == bs.status
     assert bi.status_updated_on > status_updated_on_first
+
+    prj = ProjectLogic.get_project_by_id(p.id)
+    print("xxxx: {}".format(prj.newest_build_fetched_on))
+
+    # import ipdb; ipdb.set_trace()
+    x = 2
+
 
 def test_update_build_details(app, f_projects):
     p = f_projects[0]

@@ -195,6 +195,7 @@ def update_builds_info(project_id: int):
             build = ProjectLogic.get_or_create_build_info_from_bs(p, bs)
             ProjectLogic.update_build_info_status(build, bs)
 
+        db.session.add(p)
         db.session.commit()
 
     for build in ProjectLogic.get_builds_to_update_details(p):

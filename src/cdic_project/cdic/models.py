@@ -6,6 +6,9 @@ from typing import Iterable
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy_utils import ArrowType
+from sqlalchemy import event
+
+
 import arrow
 
 
@@ -126,6 +129,9 @@ class Project(db.Model):
     # set on delete requests, indicates that project going to be deleted
     delete_requested_on = db.Column(ArrowType, index=True)
 
+    # need this to decide is we should fetch builds statuses from DockerHub
+    newest_build_fetched_on = db.Column(ArrowType)
+
     def is_build_request_in_progress(self) -> bool:
         if self.build_requested_on is None:
             return False
@@ -235,6 +241,28 @@ class DhBuildInfo(db.Model):
     status_updated_on = db.Column(ArrowType, default=arrow.utcnow)
 
     details = db.Column(JSON)
+
+
+# def update_newest_bi_fetched_on(target, value, initiator: DhBuildInfo):
+#     # prj = Project.query.filter(Project.id == initiator.project_id).one()
+#
+#     prj = initiator.project
+#     f_on = initiator.fetched_on
+#     if f_on:
+#         if prj.newest_build_fetched_on is None:
+#             max_val = initiator.fetched_on
+#         else:
+#             max_val = max(f_on, prj.newest_build_fetched_on)
+#
+#         # import ipdb; ipdb.set_trace()
+#         print("--> {}: {}".format(prj.id, max_val))
+#
+#         prj.newest_build_fetched_on = max_val
+#         # db.session.add(prj)
+#
+#
+# # event.listen(DhBuildInfo, 'after_insert', update_newest_bi_fetched_on)
+# event.listen(DhBuildInfo, 'before_update', update_newest_bi_fetched_on)
 
 
 def get_copr_url(username: str, coprname: str) -> str:

@@ -299,12 +299,22 @@ class ProjectLogic(object):
             cls, p: Project, bs: BuildStatus) -> DhBuildInfo:
         bi = cls.get_build_info_safe(p.id, bs.build_id)
         if bi is None:
+            fetched_on = arrow.utcnow()
             bi = DhBuildInfo(
                 project_id=p.id,
                 id=bs.build_id,
                 status=bs.status,
-                details=dict()
+                details=dict(),
+                fetched_on=fetched_on,
             )
+
+            # import ipdb; ipdb.set_trace()
+            if p.newest_build_fetched_on is None:
+                p.newest_build_fetched_on = fetched_on
+            else:
+                p.newest_build_fetched_on = max(fetched_on, p.newest_build_fetched_on)
+
+            db.session.add(p)
             db.session.add(bi)
             db.session.flush()
         return bi
