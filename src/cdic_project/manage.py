@@ -11,7 +11,8 @@ from flask_script import Manager, Command, Option
 from cdic_project.util import setup_logging
 from cdic_project.cdic import app, db
 from cdic_project.cdic.async.runner import RunnerAlt
-from cdic_project.cdic.action import run_build_async_task, delete_projects_task, create_project_repos_task
+from cdic_project.cdic.action import run_build_async_task, delete_projects_task, create_project_repos_task, \
+    fetch_builds_status_task
 
 manager = Manager(app)
 
@@ -93,6 +94,9 @@ class RunAsyncTasks(Command):
         r.register_task(create_project_repos_task)
         r.register_task(run_build_async_task)
         r.register_task(delete_projects_task)
+        r.register_task(fetch_builds_status_task)
+
+
 
         r.start()
 

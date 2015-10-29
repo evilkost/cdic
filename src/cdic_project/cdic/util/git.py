@@ -4,7 +4,7 @@ import os
 import shutil
 import logging
 
-from backports.typing import List, Iterable
+from typing import List, Iterable
 
 import git
 from git import Repo

@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import datetime
-from backports.typing import Iterable
+from typing import Iterable
 
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSON
@@ -229,9 +229,12 @@ class DhBuildInfo(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey("project.id"))
     project = db.relationship("Project", backref=db.backref("builds_info", lazy="dynamic"))
 
-    fetched_on = db.Column(ArrowType, default=arrow.utcnow())
+    fetched_on = db.Column(ArrowType, default=arrow.utcnow)
 
-    info = db.Column(JSON)
+    status = db.Column(db.String(31))
+    status_updated_on = db.Column(ArrowType, default=arrow.utcnow)
+
+    details = db.Column(JSON)
 
 
 def get_copr_url(username: str, coprname: str) -> str:
@@ -261,9 +264,3 @@ class LinkedCopr(db.Model):
     @property
     def copr_url(self) -> str:
         return get_copr_url(self.username, self.coprname)
-
-
-class JobState(object):
-    NEW = "new"
-    TAKEN = "taken"
-    DONE = "done"

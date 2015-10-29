@@ -3,7 +3,7 @@
 import json
 from logging import getLogger
 from requests import get
-from backports.typing import Iterable, List
+from typing import Iterable, List
 
 from copr import CoprClient
 from copr.client.responses import ProjectWrapper

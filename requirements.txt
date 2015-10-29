@@ -18,7 +18,8 @@ gitpython
 redis
 asyncio_redis
 ipdb
-backports.typing
+# backports.typing
+typing==3.5.0b1
 # copr - from system python3-copr
 # psycopg2 - from system python3-psycopg2
 lxml

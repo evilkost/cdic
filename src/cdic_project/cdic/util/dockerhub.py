@@ -9,7 +9,7 @@ import subprocess
 import pipes
 import logging
 
-from backports.typing import Iterable
+from typing import Iterable
 from dateutil.parser import parse as dt_parse
 from requests import get
 from lxml import html
@@ -21,13 +21,23 @@ log = logging.getLogger(__name__)
 logging.getLogger("requests").setLevel(logging.WARN)
 
 
-class BuildInfo(object):
+class BuildDetails(object):
 
     def __init__(self, info_table: dict, logs: str):
         self.info_table = info_table
         self.logs = logs
 
         self._created_at = None
+
+    def to_dict(self):
+        res = {
+            "info_table": self.info_table,
+            "logs": self.logs,
+        }
+        # todo: serialize date
+        #if self.created_at is not None:
+        #    res["created_at"] = self.created_at.
+        return res
 
     def parse_created_at(self):
         raw_str = self.info_table.get("created_at")
@@ -65,7 +75,7 @@ class BuildStatus(object):
 
 class AbstractDhConnector(metaclass=ABCMeta):
 
-    def get_build_info(self, repo_name: str, build_id: str) -> BuildInfo or None:
+    def get_build_details(self, repo_name: str, build_id: str) -> BuildDetails or None:
         pass
 
     def create_project(self, repo_name: str) -> bool:
@@ -164,13 +174,14 @@ class DhConnector(AbstractDhConnector):
         self.opts = opts
         self.driver = script_driver or CasperJsScriptDriver(opts)
 
-    def get_build_info(self, repo_name: str, build_id: str) -> BuildInfo or None:
+    def get_build_details(self, repo_name: str, build_id: str) -> BuildDetails or None:
         log.info("Getting build info from dockerhub")
         result = self.driver.run_script(
             "get_build_info.js", {"repo_name": repo_name, "build_id": build_id})
+        # log.info("get_build_details: {}".format(result.data))
 
-        if result.is_ok and "info_table" in result.data and "logs" in result.data:
-            return BuildInfo(result.data["info_table"], result.data["logs"])
+        if result.is_ok and "info_table" in result.data:
+            return BuildDetails(result.data["info_table"], result.data.get("logs"))
 
         return None
 
@@ -200,7 +211,7 @@ class DhConnector(AbstractDhConnector):
         log.info("Getting build trigger url: {}".format(repo_name))
         result = None
         attempt = 0
-        while result is None and attempt < 2:
+        while (result is None or not result.is_ok) and attempt < 3:
             result = self.driver.run_script("get_build_trigger.js", {"repo_name": repo_name})
             if result.is_ok:
                 return result.data["trigger_url"]
@@ -220,18 +231,19 @@ class DhConnector(AbstractDhConnector):
         result = []
         for row in rows:
             children = row.getchildren()
-            log.error(children)
+            # log.error(children)
             try:
                 b_elem = children[0].xpath(".//a")[0]
 
                 href = b_elem.attrib["href"]
                 build_id = b_elem.text_content()
-                status = children[0].text_content()
+                status = children[1].text_content()
 
                 bs = BuildStatus(repo_name, build_id, href, status)
+                log.info("BS: {}".format(bs))
                 result.append(bs)
 
-            except Exception as e:
+            except Exception:
                 log.exception("Failed to parse row")
 
         return result

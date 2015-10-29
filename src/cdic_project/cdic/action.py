@@ -4,8 +4,7 @@
 import datetime
 import logging
 
-from backports.typing import List
-
+from typing import List, Iterable
 from . import db, dh_connector, git_store
 from .util.github import GhClient
 from .models import Project
@@ -57,7 +56,7 @@ def run_build(project_id):
         # todo: send task to query build status
 
 
-def pack_p_ids(projects: List[Project]):
+def pack_p_ids(projects: Iterable[Project]):
     return [([p.id], {}) for p in projects]
 
 
@@ -178,5 +177,44 @@ delete_projects_task = TaskDef(
     work_fn=ctx_wrapper(delete_project),
     reschedule_fn=ctx_wrapper(
         lambda: pack_p_ids(ProjectLogic.get_projects_to_delete())
+    )
+)
+
+
+def update_builds_info(project_id: int):
+    p = ProjectLogic.get_project_by_id_safe(project_id)
+    if p is None:
+        return
+
+    log.info("Going to update build statuses for: {}".format(p.repo_name))
+    # if ProjectLogic.should_fetch_builds_statuses_for_project(p):
+    if True:
+        statuses = dh_connector.fetch_builds_status(p.repo_name)
+
+        for bs in statuses:
+            build = ProjectLogic.get_or_create_build_info_from_bs(p, bs)
+            ProjectLogic.update_build_info_status(build, bs)
+
+        db.session.commit()
+
+    for build in ProjectLogic.get_builds_to_update_details(p):
+        log.info("Going to update details for repo: {}, build: {}"
+                 .format(p.repo_name, build.id))
+        details = dh_connector.get_build_details(p.repo_name, build.id)
+        if details:
+            log.info("Got details")
+            ProjectLogic.update_build_info_details(build, details)
+        else:
+            log.info("Failed to get details")
+
+    if db.session.dirty:
+        db.session.commit()
+
+
+fetch_builds_status_task = TaskDef(
+    channel="fetch_builds_status",
+    work_fn=ctx_wrapper(update_builds_info),
+    reschedule_fn=ctx_wrapper(
+        lambda: pack_p_ids(ProjectLogic.get_projects_to_update_builds())
     )
 )

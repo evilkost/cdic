@@ -7,7 +7,7 @@ import logging
 
 import arrow
 
-from backports.typing import Iterable, List
+from typing import Iterable, List, Optional
 from flask import abort
 from flask_wtf import Form
 from sqlalchemy.orm.query import Query
@@ -15,10 +15,11 @@ from sqlalchemy.sql import true, or_, and_
 from sqlalchemy.orm.exc import NoResultFound
 
 from .. import db, git_store
+from ..util.dockerhub import BuildStatus, BuildDetails
 from ..util.git import AnotherRepoExists
 from ..constants import SourceType, EventType
 from ..exceptions import PatchDockerfileException
-from ..models import Project, User
+from ..models import Project, User, DhBuildInfo
 from .event_logic import create_project_event
 
 log = logging.getLogger(__name__)
@@ -155,6 +156,22 @@ class ProjectLogic(object):
             return p.build_triggered_on < p.build_requested_on
 
     @classmethod
+    def should_fetch_builds_statuses_for_project(cls, p: Project):
+        # criterion: build_triggered_on is later than latest build_info
+
+        if p.build_triggered_on is None:
+            return False
+
+        bi_list = list(reversed(sorted(
+            p.builds_info, key=lambda x: x.fetched_on)))
+
+        if len(bi_list) == 0:
+            return True
+
+        bi = bi_list[0]
+        return bi.fetched_on < p.build_triggered_on
+
+    @classmethod
     def init_local_repo(cls, project: Project):
         # TODO: this function should be placed outside from Logic
         log.info("going to init local repo")
@@ -257,3 +274,72 @@ class ProjectLogic(object):
         for pe in p.history_events:
             db.session.delete(pe)
         db.session.delete(p)
+
+    @classmethod
+    def query_build_info(cls, project_id, bi_id):
+        return (
+            DhBuildInfo.query
+            .filter(DhBuildInfo.project_id == project_id)
+            .filter(DhBuildInfo.id == bi_id)
+        )
+
+    @classmethod
+    def get_build_info(cls, project_id, bi_id):
+        return cls.query_build_info(project_id, bi_id).one()
+
+    @classmethod
+    def get_build_info_safe(cls, project_id, bi_id) -> DhBuildInfo:
+        try:
+            return cls.query_build_info(project_id, bi_id).one()
+        except NoResultFound:
+            return None
+
+    @classmethod
+    def get_or_create_build_info_from_bs(
+            cls, p: Project, bs: BuildStatus) -> DhBuildInfo:
+        bi = cls.get_build_info_safe(p.id, bs.build_id)
+        if bi is None:
+            bi = DhBuildInfo(
+                project_id=p.id,
+                id=bs.build_id,
+                status=bs.status,
+                details=dict()
+            )
+            db.session.add(bi)
+            db.session.flush()
+        return bi
+
+    @classmethod
+    def update_build_info_status(
+            cls, build: DhBuildInfo, status: BuildStatus) -> DhBuildInfo:
+
+        if build.status != status.status:
+            build.status = status.status
+            build.status_updated_on = arrow.utcnow()
+
+        return build
+
+    @classmethod
+    def update_build_info_details(
+            cls, build: DhBuildInfo, details: BuildDetails) -> DhBuildInfo:
+
+        det = dict()
+        det.update(build.details)
+        det.update(details.to_dict())
+        build.details = det
+
+        return build
+
+    @classmethod
+    def get_builds_to_update_details(cls, p: Project) -> Iterable[DhBuildInfo]:
+        # builds with non terminal states
+        # todo: add actual implementation
+        return DhBuildInfo.query.filter(DhBuildInfo.project_id == p.id).all()
+
+    @classmethod
+    def get_projects_to_update_builds(cls) -> Iterable[Project]:
+        return (
+            Project.query
+            .filter(Project.dh_build_trigger_url.isnot(None))
+            .filter(Project.build_triggered_on.isnot(None))
+        ).all()
