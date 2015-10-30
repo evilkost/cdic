@@ -107,11 +107,7 @@ def test_update_build_status(app, f_projects):
     assert bi.status == bs.status
     assert bi.status_updated_on > status_updated_on_first
 
-    prj = ProjectLogic.get_project_by_id(p.id)
-    print("xxxx: {}".format(prj.newest_build_fetched_on))
-
-    # import ipdb; ipdb.set_trace()
-    x = 2
+    # prj = ProjectLogic.get_project_by_id(p.id)
 
 
 def test_update_build_details(app, f_projects):
@@ -143,58 +139,6 @@ def test_update_build_details(app, f_projects):
     assert build2.details["info_table"] == details.info_table
     assert build2.details["logs"] == details.logs
 
-#
-#
-# def test_store_build_info(app, f_projects):
-#     bs = BuildStatus(
-#         repo_name="foobar",
-#         build_id="12345",
-#         href="http://example.com/afasdfgt",
-#         status="pending"
-#     )
-#
-#     ProjectLogic.store_build_info(f_projects[0], bs)
-#     app.db.session.commit()
-#
-#     # import ipdb; ipdb.set_trace()
-#     bi_list = DhBuildInfo.query.all()
-#     assert len(bi_list) == 1
-#     bi = bi_list[0]
-#     assert bi.id == bs.build_id
-#     assert bi.status == bs.status
-#
-#     status_updated_on_first = bi.status_updated_on
-#     # test updating, no status changes
-#     ProjectLogic.store_build_info(f_projects[0], bs)
-#     app.db.session.commit()
-#
-#     bi_list_2 = DhBuildInfo.query.all()
-#     assert len(bi_list_2) == 1
-#     bi_2 = bi_list_2[0]
-#     assert bi_2.id == bs.build_id
-#     assert bi_2.status == bs.status
-#     assert bi_2.status_updated_on == status_updated_on_first
-#
-#     # test updating with status change
-#     bs.status = "failed"
-#     ProjectLogic.store_build_info(f_projects[0], bs)
-#     app.db.session.commit()
-#
-#     bi_list_3 = DhBuildInfo.query.all()
-#     assert len(bi_list_3) == 1
-#     bi_3 = bi_list_3[0]
-#     assert bi_3.id == bs.build_id
-#     assert bi_3.status == bs.status
-#     assert bi_3.status_updated_on > status_updated_on_first
-#
-#     # test, new build info
-#     bs.build_id = "5234652sd"
-#     ProjectLogic.store_build_info(f_projects[0], bs)
-#     app.db.session.commit()
-#
-#     bi_list_4 = DhBuildInfo.query.all()
-#     assert len(bi_list_4) == 2
-#
 
 # def test_store_build_info_info(app, f_projects):
 #     p = f_projects[0]
@@ -223,12 +167,18 @@ def test_update_build_details(app, f_projects):
 #     assert bi.details["info_table"] == details.info_table
 
 
+def get_fresh_p(p: Project) -> Project:
+    return ProjectLogic.get_project_by_id(p.id)
+
+
 def test_should_get_builds_statuses(app, f_projects):
     p = f_projects[0]
-    assert ProjectLogic.should_fetch_builds_statuses_for_project(p) is False
-    p.build_triggered_on = arrow.utcnow()
+    assert ProjectLogic.should_fetch_builds_statuses_for_project(get_fresh_p(p)) is False
+    wp = get_fresh_p(p)
+    wp.build_triggered_on = arrow.utcnow()
+    app.db.session.add(wp)
     app.db.session.commit()
-    assert ProjectLogic.should_fetch_builds_statuses_for_project(p) is True
+    assert ProjectLogic.should_fetch_builds_statuses_for_project(get_fresh_p(p)) is True
 
     bs = BuildStatus(
         repo_name="foobar",
@@ -236,10 +186,14 @@ def test_should_get_builds_statuses(app, f_projects):
         href="http://example.com/afasdfgt",
         status="pending"
     )
-
+    #
     ProjectLogic.get_or_create_build_info_from_bs(p, bs)
     app.db.session.commit()
-    assert ProjectLogic.should_fetch_builds_statuses_for_project(p) is False
-    p.build_triggered_on = arrow.utcnow()
+    assert ProjectLogic.should_fetch_builds_statuses_for_project(get_fresh_p(p)) is False
+
+    wp = get_fresh_p(p)
+    wp.build_triggered_on = arrow.utcnow()
+    app.db.session.add(wp)
     app.db.session.commit()
-    assert ProjectLogic.should_fetch_builds_statuses_for_project(p) is True
+
+    assert ProjectLogic.should_fetch_builds_statuses_for_project(get_fresh_p(p)) is True

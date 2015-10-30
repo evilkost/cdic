@@ -41,10 +41,11 @@ def app(pg, request):
         yield ctx(app, client, db, db_session)
 
         db.session.rollback()
-        db.session.close_all()
+
         for tbl in reversed(db.metadata.sorted_tables):
             db.engine.execute(tbl.delete())
 
+        time.sleep(0.2)
         db.session.close_all()
 
 

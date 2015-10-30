@@ -317,7 +317,7 @@ class ProjectLogic(object):
             # print("assigned newest: {}".format(p.newest_build_fetched_on))
             # db.session.add(p)
             db.session.add(bi)
-            db.session.flush()
+            # db.session.flush()
         return bi
 
     @classmethod

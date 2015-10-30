@@ -244,9 +244,6 @@ class DhBuildInfo(db.Model):
 
 
 def update_newest_bi_fetched_on(target, value, initiator: DhBuildInfo):
-    # prj = Project.query.filter(Project.id == initiator.project_id).one()
-    # import ipdb; ipdb.set_trace()
-    # prj = initiator.project
     p_id = initiator.project_id
     old_value = db.session.query(Project.newest_build_fetched_on)\
         .filter(Project.id == p_id).scalar()
@@ -257,18 +254,12 @@ def update_newest_bi_fetched_on(target, value, initiator: DhBuildInfo):
         else:
             max_val = max(f_on, old_value)
 
-        # import ipdb; ipdb.set_trace()
-        print("--> {}: {}".format(p_id, max_val))
-
-        # prj.newest_build_fetched_on = max_val
         db.session.query(Project).filter(Project.id == p_id).update(
             {"newest_build_fetched_on": max_val}
         )
-        # db.session.add(prj)
-
 
 event.listen(DhBuildInfo, 'after_insert', update_newest_bi_fetched_on)
-# event.listen(DhBuildInfo, 'after_update', update_newest_bi_fetched_on)
+event.listen(DhBuildInfo, 'after_update', update_newest_bi_fetched_on)
 
 
 def get_copr_url(username: str, coprname: str) -> str:
