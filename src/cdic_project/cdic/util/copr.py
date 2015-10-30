@@ -7,13 +7,17 @@ from typing import Iterable, List
 
 from copr import CoprClient
 from copr.client.responses import ProjectWrapper
-from copr.client.exceptions import CoprRequestException
+try:
+    from copr.client.exceptions import CoprRequestException
+except ImportError:
+    from copr.exceptions import CoprRequestException
 
 from .. import app
 from ..models import get_copr_url
 from ..exceptions import CoprSearchError
 
 log = getLogger(__name__)
+
 
 def search_coprs(query) -> List[ProjectWrapper]:
     client = CoprClient(copr_url=app.config.get("COPR_BASE_URL"))

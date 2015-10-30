@@ -23,6 +23,8 @@ typing==3.5.0b1
 # copr - from system python3-copr
 # psycopg2 - from system python3-psycopg2
 lxml
+requests_toolbelt
+
 
 tox
 pytest

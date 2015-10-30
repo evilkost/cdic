@@ -307,14 +307,15 @@ class ProjectLogic(object):
                 details=dict(),
                 fetched_on=fetched_on,
             )
-
-            # import ipdb; ipdb.set_trace()
-            if p.newest_build_fetched_on is None:
-                p.newest_build_fetched_on = fetched_on
-            else:
-                p.newest_build_fetched_on = max(fetched_on, p.newest_build_fetched_on)
-
-            db.session.add(p)
+            #
+            # # import ipdb; ipdb.set_trace()
+            # if p.newest_build_fetched_on is None:
+            #     p.newest_build_fetched_on = fetched_on
+            # else:
+            #     p.newest_build_fetched_on = max(fetched_on, p.newest_build_fetched_on)
+            #
+            # print("assigned newest: {}".format(p.newest_build_fetched_on))
+            # db.session.add(p)
             db.session.add(bi)
             db.session.flush()
         return bi
