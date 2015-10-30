@@ -181,6 +181,65 @@ delete_projects_task = TaskDef(
 )
 
 
+def fetch_builds_statuses(project_id: int):
+    p = ProjectLogic.get_project_by_id_safe(project_id)
+    if p is None:
+        return
+
+    log.info("Going to update build statuses for: {}".format(p.repo_name))
+
+    statuses = dh_connector.fetch_builds_status(p.repo_name)
+
+    for bs in statuses:
+        build = ProjectLogic.get_or_create_build_info_from_bs(p, bs)
+        ProjectLogic.update_build_info_status(build, bs)
+        # todo: if status was changed send async task to update build details
+
+    db.session.add(p)
+    db.session.commit()
+
+
+fetch_builds_statuses_task = TaskDef(
+    channel="fetch_builds_statuses",
+    work_fn=ctx_wrapper(fetch_builds_statuses),
+    reschedule_fn=ctx_wrapper(
+        lambda: pack_p_ids(ProjectLogic.get_projects_to_fetch_builds_status())
+    )
+)
+
+
+def fetch_build_details(project_id: int, build_id: str):
+    p = ProjectLogic.get_project_by_id_safe(project_id)
+    if p is None:
+        return
+
+    build = ProjectLogic.get_build_info_safe(project_id, build_id)
+    if build is None:
+        return
+
+    log.info("Going to update build details for repo: {}, build: {}"
+             .format(p.repo_name, build.id))
+    details = dh_connector.get_build_details(p.repo_name, build.id)
+    if details:
+        log.info("Got details")
+        ProjectLogic.update_build_info_details(build, details)
+    else:
+        log.info("Failed to get details")
+
+
+def reschedule_fetch_build_details():
+    builds = ProjectLogic.get_builds_to_fetch_details()
+    return [
+        (b.project_id, b.id)
+        for b in builds
+    ]
+
+fetch_build_details_task = TaskDef(
+    channel="fetch_build_details",
+    work_fn=ctx_wrapper(fetch_build_details),
+    reschedule_fn=ctx_wrapper(reschedule_fetch_build_details)
+)
+
 def update_builds_info(project_id: int):
     p = ProjectLogic.get_project_by_id_safe(project_id)
     if p is None:

@@ -12,7 +12,7 @@ from cdic_project.util import setup_logging
 from cdic_project.cdic import app, db
 from cdic_project.cdic.async.runner import RunnerAlt
 from cdic_project.cdic.action import run_build_async_task, delete_projects_task, create_project_repos_task, \
-    fetch_builds_status_task
+    fetch_builds_status_task, fetch_builds_statuses_task
 
 manager = Manager(app)
 
@@ -88,15 +88,11 @@ class RunAsyncTasks(Command):
 
         r = RunnerAlt(app)
 
-        # r.register_task(create_gh_repo_task)
-        # r.register_task(create_dh_repo_task)
-        # r.register_task(fetch_build_trigger_task)
         r.register_task(create_project_repos_task)
         r.register_task(run_build_async_task)
         r.register_task(delete_projects_task)
-        r.register_task(fetch_builds_status_task)
 
-
+        r.register_task(fetch_builds_statuses_task)
 
         r.start()
 

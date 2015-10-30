@@ -197,3 +197,61 @@ def test_should_get_builds_statuses(app, f_projects):
     app.db.session.commit()
 
     assert ProjectLogic.should_fetch_builds_statuses_for_project(get_fresh_p(p)) is True
+
+
+def test_get_projects_to_fetch_builds_status(app, f_projects):
+    p = f_projects[0]
+    assert len(ProjectLogic.get_projects_to_fetch_builds_status()) == 0
+
+    wp = get_fresh_p(p)
+    wp.build_triggered_on = arrow.utcnow()
+    app.db.session.add(wp)
+    app.db.session.commit()
+    p_list = ProjectLogic.get_projects_to_fetch_builds_status()
+    assert len(p_list) == 1
+    assert p_list[0].id == p.id
+
+    bs = BuildStatus(
+        repo_name="foobar",
+        build_id="12345",
+        href="http://example.com/afasdfgt",
+        status="pending"
+    )
+    #
+    ProjectLogic.get_or_create_build_info_from_bs(p, bs)
+    app.db.session.commit()
+    assert len(ProjectLogic.get_projects_to_fetch_builds_status()) == 0
+
+    wp = get_fresh_p(p)
+    wp.build_triggered_on = arrow.utcnow()
+    app.db.session.add(wp)
+    app.db.session.commit()
+    p_list = ProjectLogic.get_projects_to_fetch_builds_status()
+    assert len(p_list) == 1
+    assert p_list[0].id == p.id
+
+
+def test_get_builds_to_fetch_details(app, f_projects):
+    # empty
+    builds = ProjectLogic.get_builds_to_fetch_details()
+    assert len(builds) == 0
+
+    p = f_projects[0]
+    bs = BuildStatus(
+        repo_name="foobar",
+        build_id="12345",
+        href="http://example.com/afasdfgt",
+        status="pending"
+    )
+
+    ProjectLogic.get_or_create_build_info_from_bs(p, bs)
+    app.db.session.commit()
+    builds = ProjectLogic.get_builds_to_fetch_details()
+    assert len(builds) == 1
+    assert builds[0].id == bs.build_id
+
+    builds[0].status = "done"
+    app.db.session.add(builds[0])
+    app.db.session.commit()
+    builds = ProjectLogic.get_builds_to_fetch_details()
+    assert len(builds) == 0

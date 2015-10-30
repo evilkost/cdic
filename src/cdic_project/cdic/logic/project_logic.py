@@ -158,18 +158,35 @@ class ProjectLogic(object):
     @classmethod
     def should_fetch_builds_statuses_for_project(cls, p: Project):
         # criterion: build_triggered_on is later than latest build_info
-
         if p.build_triggered_on is None:
             return False
-
-        bi_list = list(reversed(sorted(
-            p.builds_info, key=lambda x: x.fetched_on)))
-
-        if len(bi_list) == 0:
+        if p.newest_build_fetched_on is None:
             return True
+        return p.newest_build_fetched_on < p.build_triggered_on
 
-        bi = bi_list[0]
-        return bi.fetched_on < p.build_triggered_on
+    @classmethod
+    def get_projects_to_fetch_builds_status(cls) -> List[Project]:
+        query = (
+            Project.query
+            .filter(Project.build_triggered_on.isnot(None))
+            .filter(or_(
+                Project.newest_build_fetched_on.is_(None),
+                (Project.newest_build_fetched_on < Project.build_triggered_on)
+            ))
+        )
+        projects = query.all()
+
+        return projects
+
+    @classmethod
+    def get_builds_to_fetch_details(cls) -> List[DhBuildInfo]:
+        final_states = {"done", "error"}
+        query = (
+            DhBuildInfo.query
+            .filter(DhBuildInfo.status.notin_(final_states))
+        )
+        builds = query.all()
+        return builds
 
     @classmethod
     def init_local_repo(cls, project: Project):
@@ -284,13 +301,13 @@ class ProjectLogic(object):
         )
 
     @classmethod
-    def get_build_info(cls, project_id, bi_id):
-        return cls.query_build_info(project_id, bi_id).one()
+    def get_build_info(cls, project_id: int, build_id: str) -> DhBuildInfo:
+        return cls.query_build_info(project_id, build_id).one()
 
     @classmethod
-    def get_build_info_safe(cls, project_id, bi_id) -> DhBuildInfo:
+    def get_build_info_safe(cls, project_id: int, build_id: str) -> DhBuildInfo:
         try:
-            return cls.query_build_info(project_id, bi_id).one()
+            return cls.query_build_info(project_id, build_id).one()
         except NoResultFound:
             return None
 
