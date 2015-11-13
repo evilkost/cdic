@@ -72,7 +72,7 @@ var create_button_selector = x("(//form)[2]//button[text()='Create']");
 //var create_button_selector = x("//button[text()='Create']");
 var ta_selector = x("(//form)[2]//textarea");
 
-var empty_description_selector = x("//p[text()='This field is required.']");
+var empty_description_selector = x("//div[text()='This field is required.']");
 
 
 casper.waitForSelector(create_button_selector, function() {
@@ -90,14 +90,14 @@ casper.then(function() {
 casper.waitForSelector(empty_description_selector, function() {
 
 //    casper.echo("EMPTY DESCRIPTION");
-    casper.wait(1000);
-//    casper.captureSelector("202_form_before_submit.png", x("(//form)[2]"));
+    casper.wait(500);
+//    casper.captureSelector("202_form_before_submit.png", ta_selector);
     casper.sendKeys(ta_selector, "see README.md");
 
 });
 
 casper.then(function(){
-//    casper.wait(500);
+    casper.wait(500);
 //    casper.captureSelector("203_ta_form_before_submit.png", ta_selector);
     casper.click(create_button_selector);
 //    casper.wait(1000);
